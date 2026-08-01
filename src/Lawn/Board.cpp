@@ -2054,6 +2054,8 @@ void Board::ClearAdvice(AdviceType theHelpIndex)
 Coin* Board::AddCoin(int theX, int theY, CoinType theCoinType, CoinMotion theCoinMotion)
 {
 	Coin* aCoin = mCoins.DataArrayAlloc();
+	if (aCoin == nullptr)
+		return nullptr;
 	aCoin->CoinInitialize(theX, theY, theCoinType, theCoinMotion);
 	if (mApp->IsFirstTimeAdventureMode() && mLevel == 1)
 	{
@@ -2433,6 +2435,8 @@ bool Board::HasValidCobCannonSpot()
 Projectile* Board::AddProjectile(int theX, int theY, int theRenderOrder, int theRow, ProjectileType theProjectileType)
 {
 	Projectile* aProjectile = mProjectiles.DataArrayAlloc();
+	if (aProjectile == nullptr)
+		return nullptr;
 	aProjectile->ProjectileInitialize(theX, theY, theRenderOrder, theRow, theProjectileType);
 	return aProjectile;
 }
@@ -2731,7 +2735,8 @@ bool Board::CanAddBobSled()
 // GOTY @Patoke: 0x410700
 Zombie* Board::AddZombieInRow(ZombieType theZombieType, int theRow, int theFromWave)
 {
-	if (mZombies.mSize >= mZombies.mMaxSize - 1)
+	const int aRequiredSlots = (theZombieType == ZombieType::ZOMBIE_BOBSLED) ? 4 : 1; // bobsled spawns 3 followers
+	if (mZombies.mSize >= mZombies.mMaxSize - aRequiredSlots)
 	{
 		PvzpTrace("Too many zombies!!");
 		return nullptr;
@@ -4941,7 +4946,10 @@ void Board::BungeeDropZombie(BungeeDropGrid* theBungeeDropGrid, ZombieType theZo
 
 	Zombie* aBungeeZombie = AddZombie(ZombieType::ZOMBIE_BUNGEE, mCurrentWave);
 	Zombie* aZombie = AddZombie(theZombieType, mCurrentWave);
-	PVZP_ASSERT(aBungeeZombie && aZombie);
+	if (aBungeeZombie == nullptr || aZombie == nullptr)
+	{
+		return;
+	}
 
 	aBungeeZombie->BungeeDropZombie(aZombie, aGrid->mX, aGrid->mY);
 }

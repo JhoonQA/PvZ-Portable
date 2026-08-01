@@ -1939,6 +1939,8 @@ void Challenge::UpdateRainingSeeds()
 	mChallengeStateCounter = RandRangeInt(500, 999);
 
 	Coin* aCoin = mBoard->AddCoin(RandRangeInt(100, 649), 60, COIN_USABLE_SEED_PACKET, COIN_MOTION_FROM_SKY_SLOW);
+	if (aCoin == nullptr)
+		return;
 
 	SeedType aSeedType;
 	do
@@ -2070,7 +2072,11 @@ void Challenge::UpdateSlotMachine()
 				else
 				{
 					mBoard->DisplayAdvice("[ADVICE_SLOT_MACHINE_2_OF_A_KIND]", MESSAGE_STYLE_SLOT_MACHINE, ADVICE_NONE);
-					mBoard->AddCoin(360, 85, COIN_USABLE_SEED_PACKET, COIN_MOTION_COIN)->mUsableSeedType = aSeedType;
+					Coin* aCoin = mBoard->AddCoin(360, 85, COIN_USABLE_SEED_PACKET, COIN_MOTION_COIN);
+					if (aCoin == nullptr)
+						return;
+
+					aCoin->mUsableSeedType = aSeedType;
 				}
 			}
 		}
@@ -2099,7 +2105,11 @@ void Challenge::UpdateSlotMachine()
 				// @Patoke: fix silly bug XD
 				for (int i = 0; i < 3; i++)
 				{
-					mBoard->AddCoin(320 + i * 20, 85, COIN_USABLE_SEED_PACKET, COIN_MOTION_COIN)->mUsableSeedType = aPacket1;
+					Coin* aCoin = mBoard->AddCoin(320 + i * 20, 85, COIN_USABLE_SEED_PACKET, COIN_MOTION_COIN);
+					if (aCoin == nullptr)
+						break;
+
+					aCoin->mUsableSeedType = aPacket1;
 				}
 			}
 		}
@@ -2270,6 +2280,9 @@ void Challenge::SpawnLevelAward(int theGridX, int theGridY)
 	mApp->mBoardResult = BOARDRESULT_WON;
 	mApp->PlayFoley(FOLEY_SPAWN_SUN);
 	Coin* aCoin = mBoard->AddCoin(aPosX, aPosY, aCoinType, COIN_MOTION_COIN);
+	if (aCoin == nullptr)
+		return;
+
 	mApp->AddPvzpParticle(BOARD_WIDTH / 2, BOARD_HEIGHT / 2, RENDER_LAYER_TOP, PARTICLE_SCREEN_FLASH);
 
 	if (mApp->mGameMode == GAMEMODE_CHALLENGE_ZOMBIQUARIUM)
@@ -3576,6 +3589,9 @@ int Challenge::BeghouledCanClearCrater()
 Zombie* Challenge::ZombiquariumSpawnSnorkle()
 {
 	Zombie* aZombie = mBoard->AddZombieInRow(ZOMBIE_SNORKEL, 0, 0);
+	if (aZombie == nullptr)
+		return nullptr;
+
 	aZombie->mPosX = RandRangeFloat(50, 650);
 	aZombie->mPosY = RandRangeFloat(100, 400);
 	return aZombie;
@@ -3600,7 +3616,10 @@ void Challenge::ZombiquariumPacketClicked(SeedPacket* theSeedPacket)
 
 			Zombie* aZombie = ZombiquariumSpawnSnorkle();
 			mApp->PlayFoley(FOLEY_ZOMBIESPLASH);
-			mApp->AddPvzpParticle(aZombie->mPosX + 60.0f, aZombie->mPosY + 20.0f, RENDER_LAYER_TOP, PARTICLE_PLANTING_POOL);
+			if (aZombie)
+			{
+				mApp->AddPvzpParticle(aZombie->mPosX + 60.0f, aZombie->mPosY + 20.0f, RENDER_LAYER_TOP, PARTICLE_PLANTING_POOL);
+			}
 		}
 		else if (theSeedPacket->mPacketType == SEED_ZOMBIQUARIUM_TROPHY)
 		{
@@ -4149,11 +4168,23 @@ void Challenge::ScaryPotterOpenPot(GridItem* theScaryPot)
 	switch (theScaryPot->mScaryPotType)
 	{
 	case SCARYPOT_SEED:
-		mBoard->AddCoin(aXPos + 20, aYPos, COIN_USABLE_SEED_PACKET, COIN_MOTION_FROM_PLANT)->mUsableSeedType = theScaryPot->mSeedType;
+	{
+		Coin* aCoin = mBoard->AddCoin(aXPos + 20, aYPos, COIN_USABLE_SEED_PACKET, COIN_MOTION_FROM_PLANT);
+		if (aCoin)
+		{
+			aCoin->mUsableSeedType = theScaryPot->mSeedType;
+		}
 		break;
+	}
 	case SCARYPOT_ZOMBIE:
-		mBoard->AddZombieInRow(theScaryPot->mZombieType, theScaryPot->mGridY, 0)->mPosX = aXPos;
+	{
+		Zombie* aZombie = mBoard->AddZombieInRow(theScaryPot->mZombieType, theScaryPot->mGridY, 0);
+		if (aZombie)
+		{
+			aZombie->mPosX = aXPos;
+		}
 		break;
+	}
 	case SCARYPOT_SUN:
 	{
 		int aSunCount = ScaryPotterCountSunInPot(theScaryPot);
@@ -4299,6 +4330,9 @@ ZombieType Challenge::IZombieSeedTypeToZombieType(SeedType theSeedType)
 void Challenge::IZombiePlaceZombie(ZombieType theZombieType, int theGridX, int theGridY)
 {
 	Zombie* aZombie = mBoard->AddZombieInRow(theZombieType, theGridY, 0);
+	if (aZombie == nullptr)
+		return;
+
 	if (theZombieType == ZOMBIE_BUNGEE)
 	{
 		aZombie->mTargetCol = theGridX;
@@ -4993,7 +5027,10 @@ void Challenge::SquirrelFound(GridItem* theSquirrel)
 	if (theSquirrel->mGridItemState == GRIDITEM_STATE_SQUIRREL_ZOMBIE)
 	{
 		Zombie* aZombie = mBoard->AddZombieInRow(ZOMBIE_NORMAL, theSquirrel->mGridY, 0);
-		aZombie->mPosX = mBoard->GridToPixelX(theSquirrel->mGridX, theSquirrel->mGridY);
+		if (aZombie)
+		{
+			aZombie->mPosX = mBoard->GridToPixelX(theSquirrel->mGridX, theSquirrel->mGridY);
+		}
 		theSquirrel->GridItemDie();
 		mBoard->DisplayAdvice("[ADVICE_SQUIRREL_ZOMBIE]", MESSAGE_STYLE_HINT_FAST, ADVICE_NONE);
 	}

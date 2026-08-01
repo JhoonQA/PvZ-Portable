@@ -1539,6 +1539,9 @@ void Zombie::ZombieCatapultFire(Plant* thePlant)
     mApp->PlayFoley(FoleyType::FOLEY_BASKETBALL);
 
     Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder, mRow, ProjectileType::PROJECTILE_BASKETBALL);
+    if (aProjectile == nullptr)
+        return;
+
     float aRangeX = aOriginX - aTargetX - 20.0f;
     float aRangeY = aTargetY - aOriginY;
     if (aRangeX < 40.0f)
@@ -2343,16 +2346,19 @@ void Zombie::UpdateZombiePeaHead()
         {
             aOriginX += 90.0f * mScaleZombie;
             Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder, mRow, ProjectileType::PROJECTILE_PEA);
-            aProjectile->mDamageRangeFlags = 1;
+            if (aProjectile)
+                aProjectile->mDamageRangeFlags = 1;
         }
         else
         {
             Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder, mRow, ProjectileType::PROJECTILE_ZOMBIE_PEA);
-            aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
+            if (aProjectile)
+                aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
         }
 #else
         Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder, mRow, ProjectileType::PROJECTILE_ZOMBIE_PEA);
-        aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
+        if (aProjectile)
+            aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
 #endif
 
         mPhaseCounter = 150;
@@ -2463,16 +2469,19 @@ void Zombie::UpdateZombieGatlingHead()
         {
             aOriginX += 90.0f * mScaleZombie;
             Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder, mRow, ProjectileType::PROJECTILE_PEA);
-            aProjectile->mDamageRangeFlags = 1;
+            if (aProjectile)
+                aProjectile->mDamageRangeFlags = 1;
         }
         else
         {
             Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder, mRow, ProjectileType::PROJECTILE_ZOMBIE_PEA);
-            aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
+            if (aProjectile)
+                aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
         }
 #else
         Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder, mRow, ProjectileType::PROJECTILE_ZOMBIE_PEA);
-        aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
+        if (aProjectile)
+            aProjectile->mMotionType = ProjectileMotion::MOTION_BACKWARDS;
 #endif
     }
     else if (mPhaseCounter == 0)
@@ -9877,6 +9886,9 @@ void Zombie::BossSpawnContact()
     }
 
     Zombie* aZombie = mBoard->AddZombieInRow(aZombieType, mTargetRow, 0);
+    if (aZombie == nullptr)
+        return;
+
     aZombie->mPosX = 600.0f;
 }
 
@@ -9964,6 +9976,9 @@ void Zombie::BossBungeeSpawn()
     for (int i = 0; i < NUM_BOSS_BUNGEES; i++)
     {
         Zombie* aZombie = mBoard->AddZombieInRow(ZombieType::ZOMBIE_BUNGEE, 0, 0);
+        if (aZombie == nullptr)
+            break;
+
         aZombie->PickBungeeZombieTarget(mTargetCol + i);
         aZombie->mAltitude = aZombie->mPosY - 30.0f;
         mFollowerZombieID[i] = mBoard->ZombieGetID(aZombie);

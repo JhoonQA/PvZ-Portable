@@ -141,7 +141,9 @@ void CutScene::PlaceAZombie(ZombieType theZombieType, int theGridX, int theGridY
 	}
 
 	Zombie* aZombie = mBoard->AddZombieInRow(theZombieType, theGridY, -2);
-	PVZP_ASSERT(aZombie);
+	if (aZombie == nullptr)
+		return;
+
 	aZombie->mPosX = theGridX * 56 + 830;
 	aZombie->mPosY = theGridY * 90 + 70;
 	if (theGridX % 2 == 1)
@@ -1843,6 +1845,9 @@ void CutScene::ClearUpsellBoard()
 void CutScene::AddUpsellZombie(ZombieType theZombieType, int thePixelX, int theGridY)
 {
 	Zombie* aZombie = mBoard->AddZombieInRow(theZombieType, theGridY, 0);
+	if (aZombie == nullptr)
+		return;
+
 	aZombie->mPosX = thePixelX;
 	aZombie->mPosY = aZombie->GetPosYBasedOnRow(theGridY);
 	aZombie->SetRow(theGridY);

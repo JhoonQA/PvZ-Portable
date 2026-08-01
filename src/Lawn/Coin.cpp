@@ -1018,6 +1018,9 @@ void Coin::FanOutCoins(CoinType theCoinType, int theNumCoins)
         float aPosX = mPosX + 20.0f;
         float aPosY = mPosY;
         Coin* aCoin = mBoard->AddCoin(static_cast<int>(aPosX), static_cast<int>(aPosY), theCoinType, CoinMotion::COIN_MOTION_FROM_PRESENT);
+        if (aCoin == nullptr)
+            break;
+
         aCoin->mVelX = 5.0f * sin(aAngle);
         aCoin->mVelY = 5.0f * cos(aAngle);
     }
