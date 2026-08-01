@@ -50,6 +50,7 @@
 #include "widget/ButtonWidget.h"
 #include "widget/WidgetManager.h"
 #include "sound/SoundInstance.h"
+#include "misc/ModVal.h"
 
 //#define SEXY_PERF_ENABLED
 #include "misc/PerfTimer.h"
@@ -8256,6 +8257,11 @@ void Board::KeyChar(char theChar)
 		{
 			mDebugTextMode = DebugTextMode::DEBUG_TEXT_NONE;
 		}
+	}
+	else if (theChar == 'v')
+	{
+		// Hot-reload M() constants from source files (see ModVal.h)
+		TodTraceAndLogLn("ReparseModValues() %s", Sexy::ReparseModValues() ? "updated values" : "updated nothing");
 	}
 
 	if (mApp->mGameScene != GameScenes::SCENE_PLAYING)

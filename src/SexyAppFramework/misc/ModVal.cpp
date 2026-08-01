@@ -23,69 +23,58 @@
  */
 
 #include "ModVal.h"
-#include "Common.h"
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
 #include <fstream>
+#include <iterator>
+#include <unordered_map>
+#include <vector>
 
 struct ModStorage
-{		
-	bool					mChanged;
-	int						mInt; 
-	double					mDouble;	
+{
+	bool					mChanged = false;
+	int						mInt = 0;
+	double					mDouble = 0.0;
 	std::string				mString;
 };
 
-struct ModPointer
+// One registered M() call site.
+struct ModCallSite
 {
-	const char *mStrPtr;
-	int mLineNum;
-
-	ModPointer() : mStrPtr(nullptr), mLineNum(0) {}
-	ModPointer(const char *theStrPtr, int theLineNum) : mStrPtr(theStrPtr), mLineNum(theLineNum) {}
+	ModStorage				mStorage;
+	std::string				mFileName;	// source file the call site lives in
+	int						mCounter = -1;	// __COUNTER__ value baked into the key
+	int						mLineNum = -1;
 };
 
-typedef std::map<int,ModPointer> ModStorageMap; // stores counters
+// Keyed by literal address: each M() site has a unique literal, so pooling only merges the same logical site.
+using CallSiteMap = std::unordered_map<const char*, ModCallSite>;
 
-struct FileMod
+// Source file path -> the call sites registered in that file
+using FileSitesMap = std::unordered_map<std::string, std::vector<ModCallSite*>>;
+
+using StringToIntMap = std::unordered_map<std::string, int>;
+
+static CallSiteMap& GetCallSiteMap()
 {
-	bool mHasMods;
-	ModStorageMap mMap;
-
-	FileMod(bool hasMods = false) { mHasMods = hasMods; }
-};
-
-typedef std::map<std::string, int> StringToIntMap;
-typedef std::map<std::string, FileMod> FileModMap;
-
-static StringToIntMap gStringToIntMap;
-time_t gLastFileTime = 0;
-const char *gSampleString = nullptr; // for finding the others
-
-static FileModMap& GetFileModMap()
-{
-	static FileModMap aMap;
+	static CallSiteMap aMap;
 	return aMap;
 }
 
-static const char* FindFileInStringTable(const std::string &theSearch, const char *theMem, uint32_t theLength, const char *theStartPos)
+static FileSitesMap& GetFileSitesMap()
 {
-	const char *aFind = nullptr;
-	try
-	{
-		aFind = std::search(theStartPos,theMem+theLength,theSearch.c_str(),theSearch.c_str()+theSearch.length());
-		if (aFind>=theMem+theLength)
-			return nullptr;
-		else
-			return aFind;
-	}
-	catch(...)
-	{
-		return nullptr;
-	}
-
-	return nullptr;
+	static FileSitesMap aMap;
+	return aMap;
 }
 
+static StringToIntMap& GetStringToIntMap()
+{
+	static StringToIntMap aMap;
+	return aMap;
+}
+
+// Strips <counter>","<line> off a call site key, leaving the plain file name.
 static bool ParseModValString(std::string &theStr, int *theCounter = nullptr, int *theLineNum = nullptr)
 {
 	size_t aPos = theStr.length()-1;
@@ -117,82 +106,41 @@ static bool ParseModValString(std::string &theStr, int *theCounter = nullptr, in
 	return true;
 }
 
-static bool FindModValsInMemoryHelper(const char *theMem, uint32_t theLength)
+static ModCallSite* FindCallSite(const char* theKey)
 {
-	std::string aSearchStr = "SEXYMODVAL";
+	CallSiteMap &aSites = GetCallSiteMap();
+	CallSiteMap::iterator anItr = aSites.find(theKey);
+	if (anItr != aSites.end())
+		return &anItr->second;
 
-	FileModMap &aMap = GetFileModMap();
+	// First execution of this call site: register it for ReparseModValues().
+	std::string aFileName = theKey+15; // skip SEXY_SEXYMODVAL
+	int aCounter = -1, aLineNum = -1;
+	if (!ParseModValString(aFileName, &aCounter, &aLineNum))
+		return nullptr;
 
-	bool foundOne = false;
-	const char *aPtr = theMem;
-	while (true)
-	{
-		aPtr = FindFileInStringTable(aSearchStr,theMem,theLength,aPtr);
-		if (aPtr==nullptr)
-			break;
-
-		int aCounter, aLineNum;
-		std::string aFileName = aPtr+10; // skip SEXYMODVAL
-		if (ParseModValString(aFileName,&aCounter,&aLineNum))
-		{
-			FileMod &aFileMod = aMap[aFileName];
-			aFileMod.mMap[aCounter] = ModPointer(aPtr-5,aLineNum);
-			foundOne = true;
-		}
-		aPtr++;
-	}
-
-	return foundOne;
-}
-
-static void FindModValsInMemory()
-{
-	// Not implemented
-}
-
-static ModStorage* CreateFileModsHelper(const char* theFileName)
-{
-	ModStorage *aModStorage = new ModStorage;
-	aModStorage->mChanged = false;
-	(void)theFileName;
-	return aModStorage;
-}
-
-
-static ModStorage* CreateFileMods(const char* theFileName)
-{	
-	if (gSampleString==nullptr)
-		gSampleString = theFileName;
-
-	std::string aFileName = theFileName+15; // skip SEXY_SEXYMODVAL
-	ParseModValString(aFileName);
-
-	FileModMap &aMap = GetFileModMap();
-	aMap[aFileName].mHasMods = true; 
-
-	return CreateFileModsHelper(theFileName);
+	ModCallSite &aSite = aSites[theKey];
+	aSite.mFileName = aFileName;
+	aSite.mCounter = aCounter;
+	aSite.mLineNum = aLineNum;
+	GetFileSitesMap()[aFileName].push_back(&aSite); // node-based map: pointer stays valid
+	return &aSite;
 }
 
 int Sexy::ModVal(const char* theFileName, int theInt)
 {
-	if (*theFileName != 0)
-		CreateFileMods(theFileName);	
-
-	ModStorage* aModStorage = *(ModStorage**)(theFileName+1);
-	if (aModStorage->mChanged)
-		return aModStorage->mInt;
+	ModCallSite *aSite = FindCallSite(theFileName);
+	if (aSite != nullptr && aSite->mStorage.mChanged)
+		return aSite->mStorage.mInt;
 	else
 		return theInt;
 }
 
 double Sexy::ModVal(const char* theFileName, double theDouble)
 {
-	if (*theFileName != 0)
-		CreateFileMods(theFileName);	
-			
-	ModStorage* aModStorage = *(ModStorage**)(theFileName+1);
-	if (aModStorage->mChanged)
-		return aModStorage->mDouble;
+	ModCallSite *aSite = FindCallSite(theFileName);
+	if (aSite != nullptr && aSite->mStorage.mChanged)
+		return aSite->mStorage.mDouble;
 	else
 		return theDouble;
 }
@@ -204,12 +152,9 @@ float Sexy::ModVal(const char* theFileName, float theFloat)
 
 const char*	Sexy::ModVal(const char* theFileName, const char *theStr)
 {
-	if (*theFileName != 0)
-		CreateFileMods(theFileName);	
-
-	ModStorage* aModStorage = *(ModStorage**)(theFileName+1);
-	if (aModStorage->mChanged)
-		return aModStorage->mString.c_str();
+	ModCallSite *aSite = FindCallSite(theFileName);
+	if (aSite != nullptr && aSite->mStorage.mChanged)
+		return aSite->mStorage.mString.c_str();
 	else
 		return theStr;
 }
@@ -217,7 +162,7 @@ const char*	Sexy::ModVal(const char* theFileName, const char *theStr)
 
 void Sexy::AddModValEnum(const std::string &theEnumName, int theVal)
 {
-	gStringToIntMap[theEnumName] = theVal;
+	GetStringToIntMap()[theEnumName] = theVal;
 }
 
 static bool ModStringToInteger(const char* theString, int* theIntVal)
@@ -239,8 +184,9 @@ static bool ModStringToInteger(const char* theString, int* theIntVal)
 			i++;
 		}
 
-		StringToIntMap::iterator anItr = gStringToIntMap.find(aStr);
-		if (anItr!=gStringToIntMap.end())
+		StringToIntMap &aStringToIntMap = GetStringToIntMap();
+		StringToIntMap::iterator anItr = aStringToIntMap.find(aStr);
+		if (anItr!=aStringToIntMap.end())
 		{
 			*theIntVal = anItr->second;
 			return true;
@@ -401,7 +347,110 @@ static bool ModStringToString(const char* theString, std::string &theStrVal)
 	return true;
 }
 
+// Parses an M() value (just past '(') into the site's storage; returns false
+// and keeps the old value when the text is not a plain literal.
+static bool ApplyModValue(const char* theText, ModStorage *theStorage)
+{
+	while (isspace((unsigned char)*theText))
+		theText++;
+
+	if (*theText == '"')
+	{
+		if (!ModStringToString(theText, theStorage->mString))
+			return false;
+	}
+	else
+	{
+		bool aParsed = false;
+		int anIntVal;
+		if (ModStringToInteger(theText, &anIntVal))
+		{
+			theStorage->mInt = anIntVal;
+			aParsed = true;
+		}
+		double aDoubleVal;
+		if (ModStringToDouble(theText, &aDoubleVal))
+		{
+			theStorage->mDouble = aDoubleVal;
+			aParsed = true;
+		}
+		if (!aParsed)
+			return false;
+	}
+
+	theStorage->mChanged = true;
+	return true;
+}
+
+struct ModToken
+{
+	int mLineNum;
+	size_t mValuePos; // offset just past the '(' of the M( token
+};
+
+// Finds M(, M1(, ... M9( tokens at identifier boundaries, in source order.
+static std::vector<ModToken> FindModTokens(const std::string &theContents)
+{
+	std::vector<ModToken> aTokens;
+	int aLineNum = 1;
+	for (size_t i = 0; i < theContents.size(); i++)
+	{
+		char aChar = theContents[i];
+		if (aChar == '\n')
+		{
+			aLineNum++;
+		}
+		else if (aChar == 'M' && (i == 0 || (!isalnum((unsigned char)theContents[i-1]) && theContents[i-1] != '_')))
+		{
+			size_t aPos = i + 1;
+			if (aPos < theContents.size() && isdigit((unsigned char)theContents[aPos]))
+				aPos++; // M1 .. M9
+			if (aPos < theContents.size() && theContents[aPos] == '(')
+				aTokens.push_back({aLineNum, aPos + 1});
+		}
+	}
+	return aTokens;
+}
+
 bool Sexy::ReparseModValues()
 {
-	return false;
+	bool aUpdated = false;
+
+	for (auto &aFilePair : GetFileSitesMap())
+	{
+		const std::string &aFileName = aFilePair.first;
+		std::ifstream aStream(aFileName, std::ios::binary);
+		if (!aStream)
+			continue;
+		const std::string aContents((std::istreambuf_iterator<char>(aStream)), std::istreambuf_iterator<char>());
+
+		const std::vector<ModToken> aTokens = FindModTokens(aContents);
+
+		std::unordered_map<int, std::vector<size_t>> aTokensByLine;
+		for (size_t i = 0; i < aTokens.size(); i++)
+			aTokensByLine[aTokens[i].mLineNum].push_back(aTokens[i].mValuePos);
+
+		std::unordered_map<int, std::vector<ModCallSite*>> aSitesByLine;
+		for (ModCallSite *aSite : aFilePair.second)
+			aSitesByLine[aSite->mLineNum].push_back(aSite);
+
+		// __COUNTER__ increases in source order within a line, so sorted sites pair with tokens in scan order.
+		for (auto &aLinePair : aSitesByLine)
+		{
+			std::unordered_map<int, std::vector<size_t>>::iterator aTokItr = aTokensByLine.find(aLinePair.first);
+			if (aTokItr == aTokensByLine.end())
+				continue;
+
+			std::vector<ModCallSite*> &aLineSites = aLinePair.second;
+			std::sort(aLineSites.begin(), aLineSites.end(),
+				[](ModCallSite *a, ModCallSite *b) { return a->mCounter < b->mCounter; });
+
+			const std::vector<size_t> &aPositions = aTokItr->second;
+			for (size_t i = 0; i < aLineSites.size() && i < aPositions.size(); i++)
+				if (ApplyModValue(aContents.c_str() + aPositions[i], &aLineSites[i]->mStorage))
+					aUpdated = true;
+		}
+	}
+
+	return aUpdated;
 }

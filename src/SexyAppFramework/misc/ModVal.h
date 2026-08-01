@@ -45,12 +45,16 @@
 	This module determines which files to parse through (during
 	ReparseModValues()) at run-time, so if a M() macro has not yet been
 	executed within a particular source file, its value will not be 
-	updated.
+	updated. The source file must still be readable at its compile-time
+	path when ReparseModValues() is called, and edited values must stay
+	on the line the M() macro was compiled on. The parser cannot tell
+	live calls from M( in comments or strings, so don't leave either on
+	a line with a live M() call.
 
  Performance:
-	There a small setup cost the first time each M() value is accessed
-	after program startup and reparsing, but after that there is just the 
-	tiny overhead of a function call and a few vector dereferences.
+	A small setup cost is paid the first time each M() call site is
+	executed; after that there is just the overhead of a function call
+	and a map lookup keyed by the call site's string literal address.
 
  */
 
@@ -72,7 +76,7 @@ namespace Sexy
 #define MODVAL_STR_COUNTER2(x,y,z) x#y","#z
 #define MODVAL_STR_COUNTER1(x,y,z) MODVAL_STR_COUNTER2(x,y,z)
 #define MODVAL_STR_COUNTER(x) MODVAL_STR_COUNTER1(x,__COUNTER__,__LINE__)
-#define M(val) ModVal(0, MODVAL_STR_COUNTER("SEXY_SEXYMODVAL" __FILE__), (val))
+#define M(val) ModVal(MODVAL_STR_COUNTER("SEXY_SEXYMODVAL" __FILE__), (val))
 #define M1(val) M(val)
 #define M2(val) M(val)
 #define M3(val) M(val)
