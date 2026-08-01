@@ -5025,61 +5025,6 @@ void Zombie::Animate()
     }
 }
 
-/*
-void Zombie::DrawZombie(Graphics* g, const ZombieDrawPosition& theDrawPos)
-{
-    // 此函数仅 0.1.1 内测版有效，0.9.9 内测版及正式版中正常不会调用
-
-    switch (mZombieType)
-    {
-    case ZombieType::ZOMBIE_NORMAL:
-    case ZombieType::ZOMBIE_FLAG:
-    case ZombieType::ZOMBIE_TRAFFIC_CONE:
-    case ZombieType::ZOMBIE_PAIL:
-    case ZombieType::ZOMBIE_NEWSPAPER:
-    case ZombieType::ZOMBIE_DOOR:
-    case ZombieType::ZOMBIE_FOOTBALL:
-    case ZombieType::ZOMBIE_DOLPHIN_RIDER:
-    case ZombieType::ZOMBIE_LADDER:
-    //case ZombieType::ZOMBIE_DOG_WALKER:
-    //  DrawZombieWithParts(g, theDrawPos);
-    //  break;
-
-    //case ZombieType::ZOMBIE_DOG:
-    //    DrawZombiePart(g, IMAGE_ZOMBIEDOG, mIsEating ? ZombieParts::PART_HEAD : ZombieParts::PARTS_BODY, mFrame, theDrawPos);
-    //    break;
-
-    //case ZombieType::ZOMBIE_PROPELLER:
-    //    DrawZombiePart(g, IMAGE_PROPELLERZOMBIE, ZombieParts::PARTS_BODY, mFrame, theDrawPos);
-    //    break;
-
-    //case ZombieType::ZOMBIE_POLEVAULTER:
-    //case ZombieType::ZOMBIE_DANCER:
-    //case ZombieType::ZOMBIE_BACKUP_DANCER:
-    //case ZombieType::ZOMBIE_DUCKY_TUBE:
-    //case ZombieType::ZOMBIE_SNORKEL:
-    //case ZombieType::ZOMBIE_ZAMBONI:
-    //case ZombieType::ZOMBIE_BOBSLED:
-    //case ZombieType::ZOMBIE_JACK_IN_THE_BOX:
-    //case ZombieType::ZOMBIE_BALLOON:
-    //case ZombieType::ZOMBIE_DIGGER:
-    //case ZombieType::ZOMBIE_POGO:
-    //case ZombieType::ZOMBIE_YETI:
-    //case ZombieType::ZOMBIE_BUNGEE:
-    //case ZombieType::ZOMBIE_CATAPULT:
-    //case ZombieType::ZOMBIE_GARGANTUAR:
-    //case ZombieType::ZOMBIE_IMP:
-    //case ZombieType::ZOMBIE_BOSS:
-    //    PVZP_ASSERT(false);
-    //    break;
-
-    default:
-        PVZP_ASSERT(false);
-        break;
-    }
-}
-*/
-
 bool Zombie::IsWalkingBackwards()
 {
     if (mMindControlled)
@@ -5216,76 +5161,6 @@ void Zombie::DrawZombiePart(Graphics* g, Image* theImage, int theFrame, int theR
 }
 
 
-/*
-void Zombie::DrawZombieHead(Graphics* g, const ZombieDrawPosition& theDrawPos, int theFrame)
-{
-    // 此函数仅 0.1.1 内测版有效，0.9.9 内测版及正式版中正常不会调用
-
-    
-    if (mYuckyFace)
-    {
-        DrawZombiePart(g, IMAGE_ZOMBIE, mFrame, ZombieParts::PART_HEAD_YUCKY, theDrawPos);
-        return;
-    }
-
-    if (mIsEating)
-    {
-        DrawZombiePart(g, IMAGE_ZOMBIE, mFrame, ZombieParts::PART_HEAD_EATING, theDrawPos);
-
-        if (mHelmHealth == 0)
-        {
-            DrawZombiePart(g, IMAGE_ZOMBIE, 5, ZombieParts::PART_HAIR, theDrawPos);
-        }
-    }
-    else
-    {
-        DrawZombiePart(g, IMAGE_ZOMBIE, mFrame, ZombieParts::PART_HEAD, theDrawPos);
-
-        if (mVariant)
-        {
-            DrawZombiePart(g, IMAGE_ZOMBIE, theFrame, ZombieParts::PART_TONGUE, theDrawPos);
-        }
-
-        if (mHelmHealth == 0)
-        {
-            DrawZombiePart(g, IMAGE_ZOMBIE, theFrame, ZombieParts::PART_HAIR, theDrawPos);
-        }
-    }
-    
-}
-*/
-
-/*
-void Zombie::DrawZombieWithParts(Graphics* g, const ZombieDrawPosition& theDrawPos)
-{
-    // 此函数仅 0.1.1 内测版有效，0.9.9 内测版及正式版中正常不会调用
-
-    
-    int aFrame = mIsEating ? 0 : mFrame;
-    DrawZombiePart(g, IMAGE_ZOMBIE, aFrame, ZombieParts::PARTS_BODY, theDrawPos);
-
-    if (mHasArm && mBodyReanimID == ReanimationID::REANIMATIONID_NULL)
-    {
-        if (mZombiePhase == ZombiePhase::PHASE_WALKING_DOG && mHasHead)
-        {
-            ZombieDrawPosition theDrawPosLeash = theDrawPos;
-            theDrawPosLeash.mImageOffsetX -= 14.0f;
-            theDrawPosLeash.mImageOffsetY += 10.0f;
-            DrawZombiePart(g, IMAGE_ZOMBIE, aFrame, ZombieParts::PART_ARM_LEASH, theDrawPosLeash);
-        }
-        else
-        {
-            DrawZombiePart(g, IMAGE_ZOMBIE, aFrame, ZombieParts::PART_ARM, theDrawPos);
-        }
-    }
-
-    if (mHasHead && mBodyReanimID == ReanimationID::REANIMATIONID_NULL)
-    {
-        DrawZombieHead(g, theDrawPos, aFrame);
-    }
-    
-}
-*/
 
 void Zombie::UpdateReanim()
 {
