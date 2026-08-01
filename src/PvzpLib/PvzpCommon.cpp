@@ -995,6 +995,9 @@ void SexyMatrix3Multiply(SexyMatrix3& m, const SexyMatrix3& l, const SexyMatrix3
 // GOTY @Patoke: 0x51D2C0
 Color GetFlashingColor(uint32_t theCounter, int theFlashTime)
 {
+	if (theFlashTime < 2) // no room to oscillate: no flash
+		return Color(255, 255, 255, 255);
+
 	int aTimeAge = static_cast<int>(theCounter % static_cast<uint32_t>(theFlashTime));
 	int aTimeInf = theFlashTime / 2;
 	//int aTimeDel = abs(aTimeInf - aTimeAge) / aTimeInf;
