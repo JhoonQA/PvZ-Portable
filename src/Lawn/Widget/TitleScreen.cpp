@@ -470,6 +470,9 @@ void TitleScreen::Update()
 			float aPosX = aTriggerPoint[i] + 225.0f;
 			float aPosY = 511.0f;
 			Reanimation* aSproutReanim = mApp->AddReanimation(aPosX, aPosY, 0, aReanimType);
+			if (!aSproutReanim)
+				break;
+
 			aSproutReanim->mAnimRate = 18.0f;
 			aSproutReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
 

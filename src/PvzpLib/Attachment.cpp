@@ -953,6 +953,11 @@ AttachEffect* CreateEffectAttachment(AttachmentID& theAttachmentID, EffectType t
 	if (aAttachment == nullptr || aAttachment->mDead)
 	{
 		aAttachment = gEffectSystem->mAttachmentHolder->AllocAttachment();
+		if (aAttachment == nullptr)
+		{
+			theAttachmentID = AttachmentID::ATTACHMENTID_NULL;
+			return nullptr;
+		}
 		theAttachmentID = (AttachmentID)gEffectSystem->mAttachmentHolder->mAttachments.DataArrayGetID(aAttachment);
 	}
 
@@ -972,6 +977,9 @@ AttachEffect* CreateEffectAttachment(AttachmentID& theAttachmentID, EffectType t
 
 AttachEffect* AttachReanim(AttachmentID& theAttachmentID, Reanimation* theReanimation, float theOffsetX, float theOffsetY)
 {
+	if (theReanimation == nullptr)
+		return nullptr;
+
 	unsigned int aReanimId = gEffectSystem->mReanimationHolder->mReanimations.DataArrayGetID(theReanimation);
 	AttachEffect* aAttachEffect = CreateEffectAttachment(theAttachmentID, EffectType::EFFECT_REANIM, aReanimId, theOffsetX, theOffsetY);
 

@@ -1155,8 +1155,10 @@ void ReanimationHolder::InitializeHolder()
 
 Reanimation* ReanimationHolder::AllocReanimation(float theX, float theY, int theRenderOrder, ReanimationType theReanimationType)
 {
-	PVZP_ASSERT(mReanimations.mSize != mReanimations.mMaxSize);
 	Reanimation* aReanim = mReanimations.DataArrayAlloc();
+	if (aReanim == nullptr)
+		return nullptr;
+
 	aReanim->mRenderOrder = theRenderOrder;
 	aReanim->mReanimationHolder = this;
 	aReanim->ReanimationInitializeType(theX, theY, theReanimationType);
@@ -1453,6 +1455,9 @@ void Reanimation::UpdateAttacherTrack(int theTrackIndex)
 	{
 		AttachmentDie(aTrackInstance->mAttachmentID);  // 清除原有附件
 		aAttachReanim = gEffectSystem->mReanimationHolder->AllocReanimation(0.0f, 0.0f, 0, aReanimationType);  // 重新创建一个指定的动画
+		if (aAttachReanim == nullptr)
+			return;
+
 		aAttachReanim->mLoopType = aAttacherInfo.mLoopType;
 		aAttachReanim->mAnimRate = aAttacherInfo.mAnimRate;
 		AttachReanim(aTrackInstance->mAttachmentID, aAttachReanim, 0.0f, 0.0f);

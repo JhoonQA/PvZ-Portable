@@ -218,6 +218,9 @@ void MessageWidget::LayoutReanimText()
 			break;
 
 		Reanimation* aReanimText = mApp->AddReanimation(aCurPosX, aCurPosY, 0, mReanimType);
+		if (!aReanimText)
+			break;
+
 		aReanimText->mIsAttachment = true;
 		aReanimText->PlayReanim("anim_enter", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0.0f, 0.0f);
 		mTextReanimID[aCharIdx] = mApp->ReanimationGetID(aReanimText);

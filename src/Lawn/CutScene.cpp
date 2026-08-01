@@ -1534,28 +1534,43 @@ void CutScene::UpdateZombiesWon()
 		ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_ZOMBIES_WON, true);
 		int aRenderPosition = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_SCREEN_FADE, 0, 0);
 		Reanimation* aReanimation = mApp->AddReanimation(-BOARD_OFFSET, 0, aRenderPosition, ReanimationType::REANIM_ZOMBIES_WON);
-		aReanimation->mAnimRate = 12.0f;
-		aReanimation->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-		aReanimation->GetTrackInstanceByName("fullscreen")->mTrackColor = Color::Black;
-		mZombiesWonReanimID = mApp->ReanimationGetID(aReanimation);
-		aReanimation->SetFramesForLayer("ZombiesWon");
+		if (aReanimation)
+		{
+			aReanimation->mAnimRate = 12.0f;
+			aReanimation->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+			aReanimation->GetTrackInstanceByName("fullscreen")->mTrackColor = Color::Black;
+			mZombiesWonReanimID = mApp->ReanimationGetID(aReanimation);
+			aReanimation->SetFramesForLayer("ZombiesWon");
+		}
 		mApp->PlayFoley(FoleyType::FOLEY_SCREAM);
 	}
 
 	// 食脑动画开始抖动
 	if (mCutsceneTime == LostTimeBrainGraphicShake)
 	{
-		mApp->ReanimationGet(mZombiesWonReanimID)->SetShakeOverride("ZombiesWon", 1.0f);
+		Reanimation* aReanimation = mApp->ReanimationTryToGet(mZombiesWonReanimID);
+		if (aReanimation)
+		{
+			aReanimation->SetShakeOverride("ZombiesWon", 1.0f);
+		}
 	}
 	// 食脑动画结束抖动
 	if (mCutsceneTime == LostTimeBrainGraphicCancelShake)
 	{
-		mApp->ReanimationGet(mZombiesWonReanimID)->SetShakeOverride("ZombiesWon", 0.0f);
+		Reanimation* aReanimation = mApp->ReanimationTryToGet(mZombiesWonReanimID);
+		if (aReanimation)
+		{
+			aReanimation->SetShakeOverride("ZombiesWon", 0.0f);
+		}
 	}
 	// 食脑动画结束
 	if (mCutsceneTime == LostTimeBrainGraphicEnd)
 	{
-		mApp->ReanimationGet(mZombiesWonReanimID)->SetFramesForLayer("anim_screen");
+		Reanimation* aReanimation = mApp->ReanimationTryToGet(mZombiesWonReanimID);
+		if (aReanimation)
+		{
+			aReanimation->SetFramesForLayer("anim_screen");
+		}
 	}
 
 	// 过场结束，游戏失败
@@ -2193,8 +2208,14 @@ void CutScene::UpdateUpsell()
 	case 3305:  // “像这个！”
 	{
 		Reanimation* aReanimSquash = mApp->AddReanimation(0, 0, 0, ReanimationType::REANIM_SQUASH);
+		if (aReanimSquash == nullptr)
+			break;
+
 		aReanimSquash->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, 15.0f);
 		AttachEffect* anAttachEffect = AttachReanim(aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand")->mAttachmentID, aReanimSquash, 92.0f, 387.0f);
+		if (anAttachEffect == nullptr)
+			break;
+
 		anAttachEffect->mOffset.m00 = 1.2f;
 		anAttachEffect->mOffset.m11 = 1.2f;
 		aCrazyDaveReanim->Update();
@@ -2204,16 +2225,25 @@ void CutScene::UpdateUpsell()
 	case 3306:  // “还有这个！”
 	{
 		Reanimation* aReanimThreepeater = mApp->AddReanimation(0, 0, 0, ReanimationType::REANIM_THREEPEATER);
+		if (aReanimThreepeater == nullptr)
+			break;
+
 		aReanimThreepeater->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, 15.0f);
 		for (int i = 1; i < 4; i++)
 		{
 			Reanimation* aReanimHead = mApp->AddReanimation(0, 0, 0, ReanimationType::REANIM_THREEPEATER);
+			if (aReanimHead == nullptr)
+				break;
+
 			aReanimHead->mLoopType = ReanimLoopType::REANIM_LOOP;
 			aReanimHead->mAnimRate = aReanimThreepeater->mAnimRate;
 			aReanimHead->SetFramesForLayer(StrFormat("anim_head_idle%d", i).c_str());
 			aReanimHead->AttachToAnotherReanimation(aReanimThreepeater, StrFormat("anim_head%d", i).c_str());
 		}
 		AttachEffect* anAttachEffect = AttachReanim(aCrazyDaveReanim->GetTrackInstanceByName("Dave_body1")->mAttachmentID, aReanimThreepeater, 0.0f, 0.0f);
+		if (anAttachEffect == nullptr)
+			break;
+
 		PvzpScaleRotateTransformMatrix(anAttachEffect->mOffset, -70.0f, 260.0f, 0.5f, 1.2f, 1.2f);
 		aCrazyDaveReanim->Update();
 		aReanimThreepeater->Update();
@@ -2223,9 +2253,15 @@ void CutScene::UpdateUpsell()
 	case 3307:  // “过会儿，我还会添加这个！”
 	{
 		Reanimation* aReanimMagnet = mApp->AddReanimation(0, 0, 0, ReanimationType::REANIM_MAGNETSHROOM);
+		if (aReanimMagnet == nullptr)
+			break;
+
 		aReanimMagnet->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, 15.0f);
 		PvzpScaleRotateTransformMatrix(aReanimMagnet->mOverlayMatrix, 0, 0, 0.3f, 1, 1);
 		AttachEffect* anAttachEffect = AttachReanim(aCrazyDaveReanim->GetTrackInstanceByName("Dave_pot")->mAttachmentID, aReanimMagnet, 25.0f, 49.0f);
+		if (anAttachEffect == nullptr)
+			break;
+
 		anAttachEffect->mOffset.m00 = 1.2f;
 		anAttachEffect->mOffset.m11 = 1.2f;
 		aCrazyDaveReanim->Update();

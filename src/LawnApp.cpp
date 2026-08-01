@@ -2603,6 +2603,9 @@ void LawnApp::CrazyDaveEnter()
 	PVZP_ASSERT(!ReanimationTryToGet(mCrazyDaveReanimID));
 
 	Reanimation* aCrazyDaveReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_CRAZY_DAVE);
+	if (!aCrazyDaveReanim)
+		return;
+
 	aCrazyDaveReanim->mIsAttachment = true;
 	aCrazyDaveReanim->SetBasePoseFromAnim("anim_idle_handing");
 	mCrazyDaveReanimID = ReanimationGetID(aCrazyDaveReanim);
@@ -2786,11 +2789,17 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aWallnutReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_WALLNUT);
+			if (!aWallnutReanim)
+				return;
+
 			aWallnutReanim->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, 12.0f);
 			PvzpTrace("Handed");
 
 			ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
 			AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aWallnutReanim, 100.0f, 393.0f);
+			if (!aAttachEffect)
+				return;
+
 			aAttachEffect->mOffset.m00 = 1.2f;
 			aAttachEffect->mOffset.m11 = 1.2f;
 
@@ -2808,11 +2817,17 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aHammerReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_HAMMER);
+			if (!aHammerReanim)
+				return;
+
 			aHammerReanim->PlayReanim("anim_whack_zombie", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
 			aHammerReanim->mAnimTime = 1.0f;
 
 			ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
 			AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aHammerReanim, 62.0f, 445.0f);
+			if (!aAttachEffect)
+				return;
+
 			aAttachEffect->mOffset.m00 = 1.5f;
 			aAttachEffect->mOffset.m11 = 1.5f;
 
@@ -2830,6 +2845,9 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aFertilizerReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_ZENGARDEN_FERTILIZER);
+			if (!aFertilizerReanim)
+				return;
+
 			aFertilizerReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
 			aFertilizerReanim->mAnimRate = 0.0f;
 
@@ -2849,6 +2867,9 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aTreeFoodReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_TREEOFWISDOM_TREEFOOD);
+			if (!aTreeFoodReanim)
+				return;
+
 			aTreeFoodReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
 			aTreeFoodReanim->mAnimRate = 0.0f;
 
@@ -2868,6 +2889,9 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aMoneyBagReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_ZENGARDEN_FERTILIZER);
+			if (!aMoneyBagReanim)
+				return;
+
 			aMoneyBagReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
 			aMoneyBagReanim->mAnimRate = 0.0f;
 			aMoneyBagReanim->SetImageOverride("bag", IMAGE_MONEYBAG);
@@ -3013,6 +3037,9 @@ void LawnApp::UpdateCrazyDave()
 		{
 			mCrazyDaveBlinkCounter = RandRangeInt(400, 800);
 			Reanimation* aBlinkReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_CRAZY_DAVE);
+			if (!aBlinkReanim)
+				return;
+
 			aBlinkReanim->SetFramesForLayer("anim_blink");
 			aBlinkReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_FULL_LAST_FRAME_AND_HOLD;
 			aBlinkReanim->mAnimRate = 15.0f;

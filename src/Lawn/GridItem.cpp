@@ -463,6 +463,9 @@ void GridItem::OpenPortal()
             aReanimType = ReanimationType::REANIM_PORTAL_SQUARE;
         }
         aPortalReanim = mApp->AddReanimation(aXPos, aYPos, 0, aReanimType);
+        if (aPortalReanim == nullptr)
+            return;
+
         aPortalReanim->mIsAttachment = true;
         mGridItemReanimID = mApp->ReanimationGetID(aPortalReanim);
     }
@@ -508,7 +511,9 @@ bool GridItem::IsOpenPortal()
 
 void GridItem::UpdatePortal()
 {
-    Reanimation* aPortalReanim = mApp->ReanimationGet(mGridItemReanimID);
+    Reanimation* aPortalReanim = mApp->ReanimationTryToGet(mGridItemReanimID);
+    if (aPortalReanim == nullptr)
+        return;
     if (mGridItemState == GridItemState::GRIDITEM_STATE_PORTAL_CLOSED)
     {
         if (aPortalReanim->mLoopCount > 0)

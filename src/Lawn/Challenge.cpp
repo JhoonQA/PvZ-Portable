@@ -447,10 +447,17 @@ void Challenge::StartLevel()
 		ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_HAMMER, true);
 		mApp->RemoveReanimation(mBoard->mCursorObject->mReanimCursorID);
 		Reanimation* aHammerReanim = mApp->AddReanimation(-25.0f, 16.0f, 0, ReanimationType::REANIM_HAMMER);
-		aHammerReanim->mIsAttachment = true;
-		aHammerReanim->PlayReanim("anim_whack_zombie", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
-		aHammerReanim->mAnimTime = 1.0f;
-		mBoard->mCursorObject->mReanimCursorID = mApp->ReanimationGetID(aHammerReanim);
+		if (aHammerReanim)
+		{
+			aHammerReanim->mIsAttachment = true;
+			aHammerReanim->PlayReanim("anim_whack_zombie", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
+			aHammerReanim->mAnimTime = 1.0f;
+			mBoard->mCursorObject->mReanimCursorID = mApp->ReanimationGetID(aHammerReanim);
+		}
+		else
+		{
+			mBoard->mCursorObject->mReanimCursorID = REANIMATIONID_NULL;
+		}
 	}
 	if (mApp->IsStormyNightLevel())
 	{
@@ -1060,7 +1067,11 @@ void Challenge::BeghouledCreatePlants(BeghouledBoardState* theOldBoardState, Beg
 			if (theOldBoardState->mSeedType[aCol][aRow] == SEED_NONE && aSeedType != SEED_NONE)
 			{
 				aFallY -= 100;
-				mBoard->NewPlant(aCol, aRow, aSeedType, SEED_NONE)->mY = aFallY;
+				Plant* aPlant = mBoard->NewPlant(aCol, aRow, aSeedType, SEED_NONE);
+				if (aPlant)
+				{
+					aPlant->mY = aFallY;
+				}
 				BeghouledStartFalling(STATECHALLENGE_BEGHOULED_FALLING);
 			}
 		}
@@ -2277,7 +2288,7 @@ void Challenge::SpawnLevelAward(int theGridX, int theGridY)
 		mApp->IsAdventureMode() || mApp->HasBeatenChallenge(mApp->mGameMode) ? COIN_AWARD_MONEY_BAG : COIN_TROPHY;
 	
 	mBoard->mLevelAwardSpawned = true;
-	mApp->mBoardResult = BOARDRESULT_WON;
+	mApp->mBoardResult = BOARDRESULT_WON; // the win must stand even if the award coin can't spawn; the coin is only the ceremony
 	mApp->PlayFoley(FOLEY_SPAWN_SUN);
 	Coin* aCoin = mBoard->AddCoin(aPosX, aPosY, aCoinType, COIN_MOTION_COIN);
 	if (aCoin == nullptr)
@@ -3335,6 +3346,9 @@ void Challenge::MoveAPortal()
 
 	PvzpWeightedGridArray* aGrid = PvzpPickFromWeightedGridArray(aGridArray, aGridArrayCount);
 	GridItem* aNewPortal = mBoard->mGridItems.DataArrayAlloc();
+	if (aNewPortal == nullptr)
+		return;
+
 	aNewPortal->mGridItemType = aPortal->mGridItemType;
 	aNewPortal->mGridX = aGrid->mX;
 	aNewPortal->mGridY = aGrid->mY;
@@ -3635,6 +3649,9 @@ void Challenge::ZombiquariumDropBrain(int x, int y)
 {
 	mBoard->ClearAdvice(ADVICE_ZOMBIQUARIUM_CLICK_TO_FEED);
 	GridItem* aBrain = mBoard->mGridItems.DataArrayAlloc();
+	if (aBrain == nullptr)
+		return;
+
 	aBrain->mGridItemType = GRIDITEM_BRAIN;
 	aBrain->mRenderOrder = 400000;
 	aBrain->mGridX = 0;
@@ -4097,6 +4114,9 @@ void Challenge::ScaryPotterMalletPot(GridItem* theScaryPot)
 	int aXPos = mBoard->GridToPixelX(theScaryPot->mGridX, theScaryPot->mGridY);
 	int aYPos = mBoard->GridToPixelY(theScaryPot->mGridX, theScaryPot->mGridY);
 	Reanimation* aMalletReanim = mApp->AddReanimation(aXPos, aYPos, RENDER_LAYER_TOP, REANIM_HAMMER);
+	if (aMalletReanim == nullptr)
+		return;
+
 	aMalletReanim->PlayReanim("anim_pot_open", REANIM_PLAY_ONCE_AND_HOLD, 0, 40.0f);
 	mReanimChallenge = mApp->ReanimationGetID(aMalletReanim);
 	mChallengeState = STATECHALLENGE_SCARY_POTTER_MALLETING;
@@ -4417,7 +4437,11 @@ void Challenge::IZombiePlacePlantInSquare(SeedType theSeedType, int theGridX, in
 {
 	if (mBoard->CanPlantAt(theGridX, theGridY, theSeedType) == PLANTING_OK)
 	{
-		IZombieSetupPlant(mBoard->NewPlant(theGridX, theGridY, theSeedType));
+		Plant* aPlant = mBoard->NewPlant(theGridX, theGridY, theSeedType);
+		if (aPlant)
+		{
+			IZombieSetupPlant(aPlant);
+		}
 	}
 }
 
@@ -5153,6 +5177,9 @@ void Challenge::UpdateRain()
 		float aPosX = RandRangeFloat(40.0f, 740.0f);
 		float aPosY = RandRangeFloat(90.0f, 240.0f);
 		Reanimation* aSplashReanim = mApp->AddReanimation(aPosX, aPosY, RENDER_LAYER_GROUND, REANIM_RAIN_SPLASH);
+		if (aSplashReanim == nullptr)
+			return;
+
 		aSplashReanim->mColorOverride = Color(255, 255, 255, RandRangeInt(100, 200));
 		float aScale = RandRangeFloat(0.7f, 1.2f);
 		aSplashReanim->OverrideScale(aScale, aScale);
@@ -5261,12 +5288,19 @@ void Challenge::TreeOfWisdomDraw(Graphics* g)
 {
 	int aMouseOn = TreeOfWisdomMouseOn(mApp->mWidgetManager->mLastMouseX - mBoard->mX, mApp->mWidgetManager->mLastMouseY - mBoard->mY);
 
-	Reanimation* aReanimTree = mApp->ReanimationGet(mReanimChallenge);
+	Reanimation* aReanimTree = mApp->ReanimationTryToGet(mReanimChallenge);
+	if (aReanimTree == nullptr)
+		return;
+
 	aReanimTree->mEnableExtraOverlayDraw = false;
 	aReanimTree->DrawRenderGroup(g, 0);  // 绘制背景
 	for (int i = 0; i < 6; i++)
 	{
-		mApp->ReanimationGet(mReanimClouds[i])->DrawRenderGroup(g, 0);
+		Reanimation* aReanimCloud = mApp->ReanimationTryToGet(mReanimClouds[i]);
+		if (aReanimCloud)
+		{
+			aReanimCloud->DrawRenderGroup(g, 0);
+		}
 	}
 
 	int aHeight = TreeOfWisdomGetSize();
@@ -5346,6 +5380,9 @@ void Challenge::TreeOfWisdomInit()
 {
 	ReanimatorEnsureDefinitionLoaded(REANIM_TREEOFWISDOM, true);
 	Reanimation* aReanimTree = mApp->AddReanimation(0.5f, 0.5f, 0, REANIM_TREEOFWISDOM);
+	if (aReanimTree == nullptr)
+		return;
+
 	aReanimTree->mIsAttachment = true;
 	aReanimTree->AssignRenderGroupToPrefix("bg", 0);
 	aReanimTree->AssignRenderGroupToPrefix("tree", 2);
@@ -5371,6 +5408,9 @@ void Challenge::TreeOfWisdomInit()
 	for (int i = 0; i < 6; i++)
 	{
 		Reanimation* aReanimCloud = mApp->AddReanimation(0, 0, 0, REANIM_TREEOFWISDOM_CLOUDS);
+		if (aReanimCloud == nullptr)
+			break;
+
 		aReanimCloud->PlayReanim(StrFormat("Cloud%d", i + 1).c_str(), REANIM_PLAY_ONCE_AND_HOLD, 0, 0);
 		mReanimClouds[i] = mApp->ReanimationGetID(aReanimCloud);
 
@@ -5417,6 +5457,9 @@ void Challenge::TreeOfWisdomGrow()
 void Challenge::TreeOfWisdomFertilize()
 {
 	GridItem* aTreeFood = mBoard->mGridItems.DataArrayAlloc();
+	if (aTreeFood == nullptr)
+		return;
+
 	aTreeFood->mPosX = 340.0f;
 	aTreeFood->mPosY = 300.0f;
 	aTreeFood->mGridItemType = GRIDITEM_ZEN_TOOL;
@@ -5424,6 +5467,12 @@ void Challenge::TreeOfWisdomFertilize()
 	aTreeFood->mGridY = 0;
 	aTreeFood->mRenderOrder = Board::MakeRenderOrder(RENDER_LAYER_ABOVE_UI, 0, 0);
 	Reanimation* aReanim = mApp->AddReanimation(340.0f, 300.0f, 0, REANIM_TREEOFWISDOM_TREEFOOD);
+	if (aReanim == nullptr)
+	{
+		aTreeFood->GridItemDie();
+		return;
+	}
+
 	aReanim->mLoopType = REANIM_PLAY_ONCE_AND_HOLD;
 	aTreeFood->mGridItemReanimID = mApp->ReanimationGetID(aReanim);
 	aTreeFood->mGridItemState = GRIDITEM_STATE_ZEN_TOOL_FERTILIZER;
@@ -5559,23 +5608,26 @@ void Challenge::TreeOfWisdomUpdate()
 
 	for (int i = 5; i >= 0; i--) // Off by one error!
 	{
-		Reanimation* aReanimCloud = mApp->ReanimationGet(mReanimClouds[i]);
+		Reanimation* aReanimCloud = mApp->ReanimationTryToGet(mReanimClouds[i]);
 		if (mCloudsCounter[i] > 0)
 		{
 			mCloudsCounter[i]--;
-			if (mCloudsCounter[i] == 0)
+			if (mCloudsCounter[i] == 0 && aReanimCloud)
 			{
 				aReanimCloud->mLoopCount = 0;
 				aReanimCloud->mAnimTime = 0.0f;
 				aReanimCloud->mAnimRate = 0.2f;
 			}
 		}
-		else if (aReanimCloud->mLoopCount > 0)
+		else if (aReanimCloud && aReanimCloud->mLoopCount > 0)
 		{
 			mCloudsCounter[i] = RandRangeInt(2000, 4000);
 		}
 
-		aReanimCloud->Update();
+		if (aReanimCloud)
+		{
+			aReanimCloud->Update();
+		}
 	}
 }
 

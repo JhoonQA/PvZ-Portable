@@ -876,6 +876,9 @@ void Projectile::DoImpact(Zombie* theZombie)
 		if (IsSplashDamage(theZombie))
 		{
 			Reanimation* aFireReanim = mApp->AddReanimation(mPosX + 38.0f, mPosY - 20.0f, mRenderOrder + 1, ReanimationType::REANIM_JALAPENO_FIRE);
+			if (aFireReanim == nullptr)
+				break;
+
 			aFireReanim->mAnimTime = 0.25f;
 			aFireReanim->mAnimRate = 24.0f;
 			aFireReanim->OverrideScale(0.7f, 0.4f);
@@ -1208,6 +1211,9 @@ void Projectile::ConvertToFireball(int theGridX)
 	float aOffsetX = -25.0f;
 	float aOffsetY = -25.0f;
 	Reanimation* aFirePeaReanim = mApp->AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_FIRE_PEA);
+	if (aFirePeaReanim == nullptr)
+		return;
+
 	if (mMotionType == ProjectileMotion::MOTION_BACKWARDS)
 	{
 		aFirePeaReanim->OverrideScale(-1.0f, 1.0f);

@@ -501,6 +501,9 @@ int Board::MakeRenderOrder(RenderLayer theRenderLayer, int theRow, int theLayerO
 GridItem* Board::AddALadder(int theGridX, int theGridY)
 {
 	GridItem* aLadder = mGridItems.DataArrayAlloc();
+	if (aLadder == nullptr)
+		return nullptr;
+
 	aLadder->mGridItemType = GridItemType::GRIDITEM_LADDER;
 	aLadder->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, theGridY, 800);
 	aLadder->mGridX = theGridX;
@@ -511,6 +514,9 @@ GridItem* Board::AddALadder(int theGridX, int theGridY)
 GridItem* Board::AddACrater(int theGridX, int theGridY)
 {
 	GridItem* aCrater = mGridItems.DataArrayAlloc();
+	if (aCrater == nullptr)
+		return nullptr;
+
 	aCrater->mGridItemType = GridItemType::GRIDITEM_CRATER;
 	aCrater->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_GROUND, theGridY, 1);
 	aCrater->mGridX = theGridX;
@@ -521,6 +527,9 @@ GridItem* Board::AddACrater(int theGridX, int theGridY)
 GridItem* Board::AddAGraveStone(int theGridX, int theGridY)
 {
 	GridItem* aGraveStone = mGridItems.DataArrayAlloc();
+	if (aGraveStone == nullptr)
+		return nullptr;
+
 	aGraveStone->mGridItemType = GridItemType::GRIDITEM_GRAVESTONE;
 	aGraveStone->mGridItemCounter = -Rand(50);
 	aGraveStone->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_GRAVE_STONE, theGridY, 3);
@@ -1622,6 +1631,9 @@ void Board::InitLevel()
 Reanimation* Board::CreateRakeReanim(float theRakeX, float theRakeY, int theRenderOrder)
 {
 	Reanimation* aReanim = mApp->AddReanimation(theRakeX + 20, theRakeY, theRenderOrder, REANIM_RAKE);
+	if (aReanim == nullptr)
+		return nullptr;
+
 	aReanim->mAnimRate = 0;
 	aReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
 	aReanim->mIsAttachment = true;
@@ -1668,6 +1680,9 @@ void Board::PlaceRake()
 		return;
 
 	int aGridY = PvzpPickFromWeightedArray(aPickArray, aPickCount);
+	if (mGridItems.mSize >= mGridItems.mMaxSize)
+		return;
+
 	mApp->mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_RAKE]--;
 	GridItem* aRake = mGridItems.DataArrayAlloc();
 	aRake->mGridItemType = GridItemType::GRIDITEM_RAKE;
@@ -1676,7 +1691,14 @@ void Board::PlaceRake()
 	aRake->mPosX = GridToPixelX(aGridX, aGridY);
 	aRake->mPosY = GridToPixelY(aGridX, aGridY);
 	aRake->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_GRAVE_STONE, aGridY, 9);
-	aRake->mGridItemReanimID = mApp->ReanimationGetID(CreateRakeReanim(aRake->mPosX, aRake->mPosY, 0)); // Lmao gotta pass in the right coords
+	Reanimation* aRakeReanim = CreateRakeReanim(aRake->mPosX, aRake->mPosY, 0); // Lmao gotta pass in the right coords
+	if (aRakeReanim == nullptr)
+	{
+		aRake->GridItemDie();
+		return;
+	}
+
+	aRake->mGridItemReanimID = mApp->ReanimationGetID(aRakeReanim);
 	aRake->mGridItemState = GridItemState::GRIDITEM_STATE_RAKE_ATTRACTING;
 }
 
@@ -2120,6 +2142,9 @@ bool Board::IsPoolSquare(int theGridX, int theGridY)
 Plant* Board::NewPlant(int theGridX, int theGridY, SeedType theSeedType, SeedType theImitaterType)
 {
 	Plant* aPlant = mPlants.DataArrayAlloc();
+	if (aPlant == nullptr)
+		return nullptr;
+
 	aPlant->mIsOnBoard = true;
 	aPlant->PlantInitialize(theGridX, theGridY, theSeedType, theImitaterType);
 	return aPlant;
@@ -2173,6 +2198,9 @@ void Board::DoPlantingEffects(int theGridX, int theGridY, Plant* thePlant)
 Plant* Board::AddPlant(int theGridX, int theGridY, SeedType theSeedType, SeedType theImitaterType)
 {
 	Plant* aPlant = NewPlant(theGridX, theGridY, theSeedType, theImitaterType);
+	if (aPlant == nullptr)
+		return nullptr;
+
 	DoPlantingEffects(theGridX, theGridY, aPlant);
 	mChallenge->PlantAdded(aPlant);
 
@@ -3925,6 +3953,10 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 	ClearAdvice(AdviceType::ADVICE_PLANT_POTATOE_MINE_ON_LILY);
 	ClearAdvice(AdviceType::ADVICE_SURVIVE_FLAGS);
 
+	// 植物数量达到上限时不再生成植物，直接退出且不扣除阳光
+	if (mPlants.mSize >= mPlants.mMaxSize)
+		return;
+
 	// 无免费种植、非传送带关卡的卡槽植物，判断阳光是否充足：充足则扣除阳光，不足则退出
 	if (!mApp->mEasyPlantingCheat && mCursorObject->mCursorType == CursorType::CURSOR_TYPE_PLANT_FROM_BANK && !HasConveyorBeltSeedBank())
 	{
@@ -5282,6 +5314,9 @@ void Board::ZombiesWon(Zombie* theZombie)
 
 	ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_ZOMBIES_WON, true);
 	Reanimation* aReanim = mApp->AddReanimation(-BOARD_OFFSET, 0, MakeRenderOrder(RenderLayer::RENDER_LAYER_SCREEN_FADE, 0, 0), ReanimationType::REANIM_ZOMBIES_WON);
+	if (aReanim == nullptr)
+		return;
+
 	aReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
 	aReanim->GetTrackInstanceByName("fullscreen")->mTrackColor = Color::Black;
 	aReanim->SetFramesForLayer("anim_screen");
@@ -9465,6 +9500,9 @@ void Board::DoFwoosh(int theRow)
 		float aPosX = 750.0f * i / 11.0f + 10.0f;
 		float aPosY = GetPosYBasedOnRow(aPosX + 10.0f, theRow) - 10.0f;
 		Reanimation* aFwoosh = mApp->AddReanimation(aPosX, aPosY, aRenderOrder, ReanimationType::REANIM_JALAPENO_FIRE);
+		if (aFwoosh == nullptr)
+			break;
+
 		aFwoosh->SetFramesForLayer("anim_flame");
 		aFwoosh->mLoopType = ReanimLoopType::REANIM_LOOP_FULL_LAST_FRAME;
 		aFwoosh->mAnimRate *= RandRangeFloat(0.7f, 1.3f);

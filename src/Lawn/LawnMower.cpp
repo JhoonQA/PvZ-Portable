@@ -61,6 +61,12 @@ void LawnMower::LawnMowerInitialize(int theRow)
     }
 
     Reanimation* aMowerReanim = mApp->AddReanimation(0.0f, 18.0f, mRenderOrder, aReanimType);
+    if (aMowerReanim == nullptr)
+    {
+        mDead = true;
+        return;
+    }
+
     aMowerReanim->mAnimRate = 0.0f;
     aMowerReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
     aMowerReanim->mIsAttachment = true;
@@ -96,7 +102,8 @@ void LawnMower::UpdatePool()
     if (isPoolRange && mMowerHeight == MowerHeight::MOWER_HEIGHT_LAND)
     {
         Reanimation* aSplashReanim = mApp->AddReanimation(mPosX + 0.0f, mPosY + 25.0f, mRenderOrder + 1, ReanimationType::REANIM_SPLASH);
-        aSplashReanim->OverrideScale(1.2f, 0.8f);
+        if (aSplashReanim)
+            aSplashReanim->OverrideScale(1.2f, 0.8f);
         mApp->AddPvzpParticle(mPosX + 0.0f + 50.0f, mPosY + 0.0f + 42.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_PLANTING_POOL);
         mApp->PlayFoley(FoleyType::FOLEY_ZOMBIESPLASH);
         mMowerHeight = MowerHeight::MOWER_HEIGHT_DOWN_TO_POOL;
@@ -118,7 +125,8 @@ void LawnMower::UpdatePool()
             mAltitude = -28.0f;
             mMowerHeight = MowerHeight::MOWER_HEIGHT_UP_TO_LAND;
             Reanimation* aSplashReanim = mApp->AddReanimation(mPosX + 0.0f, mPosY + 25.0f, mRenderOrder + 1, ReanimationType::REANIM_SPLASH);
-            aSplashReanim->OverrideScale(1.2f, 0.8f);
+            if (aSplashReanim)
+                aSplashReanim->OverrideScale(1.2f, 0.8f);
             mApp->AddPvzpParticle(mPosX + 0.0f + 50.0f, mPosY + 0.0f + 42.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_PLANTING_POOL);
             mApp->PlayFoley(FoleyType::FOLEY_PLANT_WATER);
             aMowerReanim->PlayReanim("anim_land", ReanimLoopType::REANIM_LOOP, 0, 0.0f);
@@ -258,7 +266,8 @@ void LawnMower::Update()
     if (mMowerType == LawnMowerType::LAWNMOWER_LAWN && mBoard->mPlantRow[mRow] == PlantRowType::PLANTROW_POOL && mPosX > 50.0f)
     {
         Reanimation* aSplashReanim = mApp->AddReanimation(mPosX, mPosY + 25.0f, mRenderOrder + 1, ReanimationType::REANIM_SPLASH);
-        aSplashReanim->OverrideScale(1.2f, 0.8f);
+        if (aSplashReanim)
+            aSplashReanim->OverrideScale(1.2f, 0.8f);
         mApp->AddPvzpParticle(mPosX + 50.0f, mPosY + 67.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_PLANTING_POOL);
         mApp->PlaySample(SOUND_ZOMBIE_ENTERING_WATER);
         mApp->mSoundSystem->StopFoley(FoleyType::FOLEY_LAWNMOWER);
@@ -373,6 +382,9 @@ void LawnMower::Die()
     if (mBoard->mBonusLawnMowersRemaining > 0 && !mBoard->HasLevelAwardDropped())
     {
         LawnMower* aLawnMower = mBoard->mLawnMowers.DataArrayAlloc();
+        if (aLawnMower == nullptr)
+            return;
+
         aLawnMower->LawnMowerInitialize(mRow);
         aLawnMower->mMowerState = LawnMowerState::MOWER_ROLLING_IN;
         mBoard->mBonusLawnMowersRemaining--;

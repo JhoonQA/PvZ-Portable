@@ -220,21 +220,27 @@ Plant* ZenGarden::PlacePottedPlant(intptr_t thePottedPlantIndex)
     if (needPot)
     {
         Plant* aPot = mBoard->NewPlant(aPottedPlant->mX, aPottedPlant->mY, SeedType::SEED_FLOWERPOT, SeedType::SEED_NONE);
-        aPot->mRenderOrder = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, 0, aPot->mY);
-        aPot->mStateCountdown = 0;
+        if (aPot)
+        {
+            aPot->mRenderOrder = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, 0, aPot->mY);
+            aPot->mStateCountdown = 0;
 
-        Reanimation* aPotReanim = mApp->ReanimationGet(aPot->mBodyReanimID);
-        if (Plant::IsAquatic(aSeedType))
-        {
-            aPotReanim->SetFramesForLayer("anim_waterplants");
-        }
-        else
-        {
-            aPotReanim->SetFramesForLayer("anim_zengarden");
+            Reanimation* aPotReanim = mApp->ReanimationGet(aPot->mBodyReanimID);
+            if (Plant::IsAquatic(aSeedType))
+            {
+                aPotReanim->SetFramesForLayer("anim_waterplants");
+            }
+            else
+            {
+                aPotReanim->SetFramesForLayer("anim_zengarden");
+            }
         }
     }
 
     Plant* aPlant = mBoard->NewPlant(aPottedPlant->mX, aPottedPlant->mY, aSeedType, SeedType::SEED_NONE);
+    if (aPlant == nullptr)
+        return nullptr;
+
     aPlant->mPottedPlantIndex = thePottedPlantIndex;
     aPlant->mRenderOrder = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, 0, aPlant->mY + 1);
     aPlant->mStateCountdown = 0;
@@ -397,7 +403,7 @@ void ZenGarden::AddPottedPlant(PottedPlant* thePottedPlant)
     if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN && mBoard && aPottedPlant->mWhichZenGarden == mGardenType)
     {
         Plant* aPlant = PlacePottedPlant(aPottedPlantIndex);
-        if (mApp->GetDialog(Dialogs::DIALOG_STORE) == nullptr)
+        if (aPlant && mApp->GetDialog(Dialogs::DIALOG_STORE) == nullptr)
         {
             mBoard->DoPlantingEffects(aPottedPlant->mX, aPottedPlant->mY, aPlant);
         }
@@ -936,6 +942,9 @@ void ZenGarden::MouseDownWithFeedingTool(int x, int y, CursorType theCursorType)
     if (aPlantToFeed)
     {
         GridItem* aZenTool = mBoard->mGridItems.DataArrayAlloc();
+        if (aZenTool == nullptr)
+            return;
+
         aZenTool->mGridItemType = GridItemType::GRIDITEM_ZEN_TOOL;
         aZenTool->mGridX = aPlantToFeed->mPlantCol;
         aZenTool->mGridY = aPlantToFeed->mRow;
@@ -950,16 +959,22 @@ void ZenGarden::MouseDownWithFeedingTool(int x, int y, CursorType theCursorType)
                 aZenTool->mPosX = x;
                 aZenTool->mPosY = y;
                 Reanimation* aWateringCanReanim = mApp->AddReanimation(x, y, 0, ReanimationType::REANIM_ZENGARDEN_WATERINGCAN);
-                aWateringCanReanim->PlayReanim("anim_water_area", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 8.0f);
-                aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aWateringCanReanim);
+                if (aWateringCanReanim)
+                {
+                    aWateringCanReanim->PlayReanim("anim_water_area", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 8.0f);
+                    aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aWateringCanReanim);
+                }
                 aZenTool->mGridItemState = GridItemState::GRIDITEM_STATE_ZEN_TOOL_GOLD_WATERING_CAN;
                 mApp->PlayFoley(FoleyType::FOLEY_WATERING);
             }
             else
             {
                 Reanimation* aWateringCanReanim = mApp->AddReanimation(aPlantToFeed->mX + 32, aPlantToFeed->mY, 0, ReanimationType::REANIM_ZENGARDEN_WATERINGCAN);
-                aWateringCanReanim->PlayReanim("anim_water", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 0.0f);
-                aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aWateringCanReanim);
+                if (aWateringCanReanim)
+                {
+                    aWateringCanReanim->PlayReanim("anim_water", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 0.0f);
+                    aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aWateringCanReanim);
+                }
                 aZenTool->mGridItemState = GridItemState::GRIDITEM_STATE_ZEN_TOOL_WATERING_CAN;
                 mApp->PlayFoley(FoleyType::FOLEY_WATERING);
             }
@@ -967,8 +982,11 @@ void ZenGarden::MouseDownWithFeedingTool(int x, int y, CursorType theCursorType)
         else if (theCursorType == CursorType::CURSOR_TYPE_FERTILIZER)
         {
             Reanimation* aFertilizerReanim = mApp->AddReanimation(aPlantToFeed->mX, aPlantToFeed->mY, 0, ReanimationType::REANIM_ZENGARDEN_FERTILIZER);
-            aFertilizerReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-            aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aFertilizerReanim);
+            if (aFertilizerReanim)
+            {
+                aFertilizerReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+                aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aFertilizerReanim);
+            }
             aZenTool->mGridItemState = GridItemState::GRIDITEM_STATE_ZEN_TOOL_FERTILIZER;
             mApp->PlayFoley(FoleyType::FOLEY_FERTILIZER);
 
@@ -978,8 +996,11 @@ void ZenGarden::MouseDownWithFeedingTool(int x, int y, CursorType theCursorType)
         else if (theCursorType == CursorType::CURSOR_TYPE_BUG_SPRAY)
         {
             Reanimation* aBugSprayReanim = mApp->AddReanimation(aPlantToFeed->mX + 54, aPlantToFeed->mY, 0, ReanimationType::REANIM_ZENGARDEN_BUGSPRAY);
-            aBugSprayReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-            aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aBugSprayReanim);
+            if (aBugSprayReanim)
+            {
+                aBugSprayReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+                aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aBugSprayReanim);
+            }
             aZenTool->mGridItemState = GridItemState::GRIDITEM_STATE_ZEN_TOOL_BUG_SPRAY;
             mApp->PlayFoley(FoleyType::FOLEY_BUGSPRAY);
 
@@ -989,9 +1010,12 @@ void ZenGarden::MouseDownWithFeedingTool(int x, int y, CursorType theCursorType)
         else if (theCursorType == CursorType::CURSOR_TYPE_PHONOGRAPH)
         {
             Reanimation* aPhonographReanim = mApp->AddReanimation(aPlantToFeed->mX + 20, aPlantToFeed->mY + 34, 0, ReanimationType::REANIM_ZENGARDEN_PHONOGRAPH);
-            aPhonographReanim->mAnimRate = 20.0f;
-            aPhonographReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
-            aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aPhonographReanim);
+            if (aPhonographReanim)
+            {
+                aPhonographReanim->mAnimRate = 20.0f;
+                aPhonographReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
+                aZenTool->mGridItemReanimID = mApp->ReanimationGetID(aPhonographReanim);
+            }
             aZenTool->mGridItemState = GridItemState::GRIDITEM_STATE_ZEN_TOOL_PHONOGRAPH;
             mApp->PlayFoley(FoleyType::FOLEY_PHONOGRAPH);
         }
@@ -1289,6 +1313,12 @@ void ZenGarden::AddStinky()
     aStinky->mGoalX = aStinky->mPosX;
     aStinky->mGoalY = aStinky->mPosY;
     Reanimation* aReanimStinky = mApp->AddReanimation(aStinky->mPosX, aStinky->mPosY, 0, ReanimationType::REANIM_STINKY);
+    if (aReanimStinky == nullptr)
+    {
+        aStinky->GridItemDie();
+        return;
+    }
+
     aReanimStinky->OverrideScale(0.8f, 0.8f);
     aStinky->mGridItemReanimID = mApp->ReanimationGetID(aReanimStinky);
 
@@ -1420,7 +1450,10 @@ void ZenGarden::StinkyWakeUp(GridItem* theStinky)
     theStinky->mGridItemState = GridItemState::GRIDITEM_STINKY_WAKING_UP;
 
     Reanimation* aSleepingReanim = FindReanimAttachment(aStinkyReanim->GetTrackInstanceByName("shell")->mAttachmentID);
-    aSleepingReanim->ReanimationDie();
+    if (aSleepingReanim)
+    {
+        aSleepingReanim->ReanimationDie();
+    }
 
     gLawnApp->mPlayerInfo->mHasWokenStinky = 1;
 }
@@ -1439,9 +1472,12 @@ void ZenGarden::StinkyFinishFallingAsleep(GridItem* theStinky, int theBlendTime)
     aStinkyReanim->mAnimRate = 0.0f;
 
     Reanimation* aSleepingReanim = mApp->AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_SLEEPING);
-    aSleepingReanim->mAnimRate = 3.0f;
-    aSleepingReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
-    AttachReanim(aStinkyReanim->GetTrackInstanceByName("shell")->mAttachmentID, aSleepingReanim, 34.0f, 39.0f);
+    if (aSleepingReanim)
+    {
+        aSleepingReanim->mAnimRate = 3.0f;
+        aSleepingReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
+        AttachReanim(aStinkyReanim->GetTrackInstanceByName("shell")->mAttachmentID, aSleepingReanim, 34.0f, 39.0f);
+    }
 
     theStinky->mGridItemState = GridItemState::GRIDITEM_STINKY_SLEEPING;
     if (!gLawnApp->mPlayerInfo->mHasWokenStinky)
@@ -1931,7 +1967,10 @@ void ZenGarden::MouseDownWithFullWheelBarrow(int x, int y)
     intptr_t aPottedPlantIndex = (reinterpret_cast<intptr_t>(aPottedPlant) -
         reinterpret_cast<intptr_t>(mApp->mPlayerInfo->mPottedPlant)) / static_cast<intptr_t>(sizeof(PottedPlant));
     Plant* aPlant = PlacePottedPlant(aPottedPlantIndex);
-    mBoard->DoPlantingEffects(aPottedPlant->mX, aPottedPlant->mY, aPlant);
+    if (aPlant)
+    {
+        mBoard->DoPlantingEffects(aPottedPlant->mX, aPottedPlant->mY, aPlant);
+    }
 }
 
 void ZenGarden::MouseDownWithEmptyWheelBarrow(Plant* thePlant)
