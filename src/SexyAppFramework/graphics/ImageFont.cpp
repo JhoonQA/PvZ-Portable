@@ -23,6 +23,7 @@
  */
 
 #include "ImageFont.h"
+#include "ImageOps.h"
 #include "Graphics.h"
 #include "Image.h"
 #include "SexyAppBase.h"
@@ -1151,7 +1152,7 @@ ActiveFontLayer::ActiveFontLayer(const ActiveFontLayer& theActiveFontLayer) :
 	mOwnsImage(theActiveFontLayer.mOwnsImage)
 {
 	if (mOwnsImage)
-		mScaledImage = mBaseFontLayer->mFontData->mApp->CopyImage(mScaledImage);
+		mScaledImage = Sexy::CopyImage(mBaseFontLayer->mFontData->mApp->mGLInterface, mScaledImage);
 
 	for (auto anItr = theActiveFontLayer.mScaledCharImageRects.begin(); anItr != theActiveFontLayer.mScaledCharImageRects.end(); anItr++)
 	{

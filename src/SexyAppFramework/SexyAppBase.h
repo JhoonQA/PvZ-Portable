@@ -498,19 +498,6 @@ public:
 	void					PrecacheNative(MemoryImage* theImage);
 	void					SetCursorImage(int theCursorNum, Image* theImage);
 
-	GLImage*				CreateCrossfadeImage(Image* theImage1, const Rect& theRect1, Image* theImage2, const Rect& theRect2, double theFadeFactor);
-	void					ColorizeImage(Image* theImage, const Color& theColor);
-	GLImage*				CreateColorizedImage(Image* theImage, const Color& theColor);
-	GLImage*				CopyImage(Image* theImage, const Rect& theRect);
-	GLImage*				CopyImage(Image* theImage);
-	void					MirrorImage(Image* theImage);
-	void					FlipImage(Image* theImage);
-	void					RotateImageHue(Sexy::MemoryImage *theImage, int theDelta);
-	uint32_t				HSLToRGB(int h, int s, int l);
-	uint32_t				RGBToHSL(int r, int g, int b);
-	void					HSLToRGB(const uint32_t* theSource, uint32_t* theDest, int theSize);
-	void					RGBToHSL(const uint32_t* theSource, uint32_t* theDest, int theSize);
-
 	void					AddMemoryImage(MemoryImage* theMemoryImage);
 	void					RemoveMemoryImage(MemoryImage* theMemoryImage);
 	void					Remove3DData(MemoryImage* theMemoryImage);
