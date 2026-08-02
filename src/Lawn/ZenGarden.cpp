@@ -1322,6 +1322,9 @@ void ZenGarden::AddStinky()
     }
 
     GridItem* aStinky = mBoard->mGridItems.DataArrayAlloc();
+    if (aStinky == nullptr)
+        return;
+
     aStinky->mGridItemType = GridItemType::GRIDITEM_STINKY;
     aStinky->mPosX = mApp->mPlayerInfo->mStinkyPosX;
     aStinky->mPosY = mApp->mPlayerInfo->mStinkyPosY;

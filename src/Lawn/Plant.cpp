@@ -781,11 +781,14 @@ bool Plant::FindTargetAndFire(int theRow, PlantWeapon thePlantWeapon)
 
     if (mSeedType == SeedType::SEED_SPLITPEA && thePlantWeapon == PlantWeapon::WEAPON_SECONDARY)
     {
-        Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-        aHeadReanim2->StartBlend(20);
-        aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-        aHeadReanim2->mAnimRate = 35.0f;
-        aHeadReanim2->SetFramesForLayer("anim_splitpea_shooting");
+        Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+        if (aHeadReanim2)
+        {
+            aHeadReanim2->StartBlend(20);
+            aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+            aHeadReanim2->mAnimRate = 35.0f;
+            aHeadReanim2->SetFramesForLayer("anim_splitpea_shooting");
+        }
         mShootingCounter = 26;
     }
     else if (aHeadReanim && aHeadReanim->TrackExists("anim_shooting"))
@@ -866,11 +869,11 @@ void Plant::LaunchThreepeater()
         (mBoard->RowCanHaveZombies(rowAbove) && FindTargetZombie(rowAbove, PlantWeapon::WEAPON_PRIMARY)) ||
         (mBoard->RowCanHaveZombies(rowBelow) && FindTargetZombie(rowBelow, PlantWeapon::WEAPON_PRIMARY)))
     {
-        Reanimation* aHeadReanim1 = mApp->ReanimationGet(mHeadReanimID);
-        Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-        Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
+        Reanimation* aHeadReanim1 = mApp->ReanimationTryToGet(mHeadReanimID);
+        Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+        Reanimation* aHeadReanim3 = mApp->ReanimationTryToGet(mHeadReanimID3);
 
-        if (mBoard->RowCanHaveZombies(rowBelow))
+        if (aHeadReanim1 && mBoard->RowCanHaveZombies(rowBelow))
         {
             aHeadReanim1->StartBlend(10);
             aHeadReanim1->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
@@ -878,12 +881,15 @@ void Plant::LaunchThreepeater()
             aHeadReanim1->SetFramesForLayer("anim_shooting1");
         }
 
-        aHeadReanim2->StartBlend(10);
-        aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-        aHeadReanim2->mAnimRate = 20.0f;
-        aHeadReanim2->SetFramesForLayer("anim_shooting2");
+        if (aHeadReanim2)
+        {
+            aHeadReanim2->StartBlend(10);
+            aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+            aHeadReanim2->mAnimRate = 20.0f;
+            aHeadReanim2->SetFramesForLayer("anim_shooting2");
+        }
 
-        if (mBoard->RowCanHaveZombies(rowAbove))
+        if (aHeadReanim3 && mBoard->RowCanHaveZombies(rowAbove))
         {
             aHeadReanim3->StartBlend(10);
             aHeadReanim3->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
@@ -3317,19 +3323,19 @@ void Plant::UpdateShooting()
         {
             int rowAbove = mRow - 1;
             int rowBelow = mRow + 1;
-            Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-            Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
-            Reanimation* aHeadReanim1 = mApp->ReanimationGet(mHeadReanimID);
+            Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+            Reanimation* aHeadReanim3 = mApp->ReanimationTryToGet(mHeadReanimID3);
+            Reanimation* aHeadReanim1 = mApp->ReanimationTryToGet(mHeadReanimID);
 
-            if (aHeadReanim1->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+            if (aHeadReanim1 && aHeadReanim1->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
             {
                 Fire(nullptr, rowBelow, PlantWeapon::WEAPON_PRIMARY);
             }
-            if (aHeadReanim2->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+            if (aHeadReanim2 && aHeadReanim2->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
             {
                 Fire(nullptr, mRow, PlantWeapon::WEAPON_PRIMARY);
             }
-            if (aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+            if (aHeadReanim3 && aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
             {
                 Fire(nullptr, rowAbove, PlantWeapon::WEAPON_PRIMARY);
             }
