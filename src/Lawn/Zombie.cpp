@@ -456,9 +456,7 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
         if (mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR)
         {
             if (aBodyReanim)
-            {
                 aBodyReanim->SetImageOverride("anim_head1", IMAGE_REANIM_ZOMBIE_GARGANTUAR_HEAD_REDEYE);
-            }
 
             mBodyHealth = 6000;
         }
@@ -2738,7 +2736,9 @@ void Zombie::BobsledCrash()
     Reanimation* aLeaderReanim = mApp->ReanimationGet(mBodyReanimID);
     for (int i = 0; i < NUM_BOBSLED_FOLLOWERS; i++)
     {
-        Zombie* aFollowerZombie = mBoard->ZombieGet(mFollowerZombieID[i]);
+        Zombie* aFollowerZombie = mBoard->ZombieTryToGet(mFollowerZombieID[i]);
+        if (aFollowerZombie == nullptr)
+            continue;
         aFollowerZombie->mZombiePhase = ZombiePhase::PHASE_BOBSLED_CRASHING;
         aFollowerZombie->mPhaseCounter = BOBSLED_CRASH_TIME;
         aFollowerZombie->mPosY = GetPosYBasedOnRow(mRow);
@@ -2766,10 +2766,13 @@ void Zombie::UpdateZombieBobsled()
             {
                 for (int i = 0; i < NUM_BOBSLED_FOLLOWERS; i++)
                 {
-                    Zombie* aZombie = mBoard->ZombieGet(mFollowerZombieID[i]);
-                    aZombie->mRelatedZombieID = ZombieID::ZOMBIEID_NULL;
+                    Zombie* aZombie = mBoard->ZombieTryToGet(mFollowerZombieID[i]);
+                    if (aZombie)
+                    {
+                        aZombie->mRelatedZombieID = ZombieID::ZOMBIEID_NULL;
+                        aZombie->PickRandomSpeed();
+                    }
                     mFollowerZombieID[i] = ZombieID::ZOMBIEID_NULL;
-                    aZombie->PickRandomSpeed();
                 }
                 PickRandomSpeed();
             }
@@ -7498,8 +7501,8 @@ void Zombie::BobsledDie()
     }
     for (int i = 0; i < NUM_BOBSLED_FOLLOWERS; i++)
     {
-        Zombie* aZombie = mBoard->ZombieGet(aLeaderZombie->mFollowerZombieID[i]);
-        if (!aZombie->mDead)
+        Zombie* aZombie = mBoard->ZombieTryToGet(aLeaderZombie->mFollowerZombieID[i]);
+        if (aZombie && !aZombie->mDead)
         {
             aZombie->DieNoLoot();
         }
@@ -7524,7 +7527,9 @@ void Zombie::BobsledBurn()
     aLeaderZombie->ApplyBurn();
     for (int i = 0; i < NUM_BOBSLED_FOLLOWERS; i++)
     {
-        mBoard->ZombieGet(aLeaderZombie->mFollowerZombieID[i])->DieNoLoot();
+        Zombie* aZombie = mBoard->ZombieTryToGet(aLeaderZombie->mFollowerZombieID[i]);
+        if (aZombie)
+            aZombie->DieNoLoot();
     }
 }
 
