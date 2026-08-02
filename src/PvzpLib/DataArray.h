@@ -153,7 +153,7 @@ public:
 		return std::default_sentinel;
 	}
 
-	T* DataArrayAlloc()
+	[[nodiscard]] T* DataArrayAlloc() // nullptr when full; the result must be checked
 	{
 		if (mSize >= mMaxSize)
 		{
