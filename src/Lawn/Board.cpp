@@ -3968,14 +3968,14 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 	ClearAdvice(AdviceType::ADVICE_PLANT_POTATOE_MINE_ON_LILY);
 	ClearAdvice(AdviceType::ADVICE_SURVIVE_FLAGS);
 
-	// 植物数量达到上限时不再生成植物，直接退出且不扣除阳光
+	// Plant cap reached: bail out before any charge.
 	if (mPlants.mSize >= mPlants.mMaxSize)
 		return;
 
-	// 无免费种植、非传送带关卡的卡槽植物，判断阳光是否充足：充足则扣除阳光，不足则退出
+	// Bank plants (no cheat, no conveyor belt): only preflight the sun cost here; it is charged after the plant is actually placed.
 	if (!mApp->mEasyPlantingCheat && mCursorObject->mCursorType == CursorType::CURSOR_TYPE_PLANT_FROM_BANK && !HasConveyorBeltSeedBank())
 	{
-		if (!TakeSunMoney(GetCurrentPlantCost(aPlantingSeedType, SeedType::SEED_NONE)))
+		if (!CanTakeSunMoney(GetCurrentPlantCost(aPlantingSeedType, SeedType::SEED_NONE)))
 		{
 			return;
 		}
@@ -4044,11 +4044,15 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 		AddPlant(aGridX, aGridY, mCursorObject->mType, mCursorObject->mImitaterType);
 		Coin* aCoin = mCoins.DataArrayTryToGet(mCursorObject->mCoinID);
 		mCursorObject->mCoinID = CoinID::COINID_NULL;
-		aCoin->Die();
+		if (aCoin != nullptr)
+			aCoin->Die();
 	}
 	else if (mCursorObject->mCursorType == CursorType::CURSOR_TYPE_PLANT_FROM_BANK)
 	{
 		Plant* aPlant = AddPlant(aGridX, aGridY, mCursorObject->mType, mCursorObject->mImitaterType);
+		if (aPlant == nullptr)
+			return;
+
 		if (aIsAwake)
 		{
 			aPlant->SetSleeping(false);
@@ -4057,6 +4061,9 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 		{
 			aPlant->mWakeUpCounter = aWakeUpCounter;
 		}
+
+		if (!mApp->mEasyPlantingCheat && !HasConveyorBeltSeedBank())
+			TakeSunMoney(GetCurrentPlantCost(aPlantingSeedType, SeedType::SEED_NONE));
 
 		mSeedBank->mSeedPackets[mCursorObject->mSeedBankIndex].WasPlanted();
 	}
