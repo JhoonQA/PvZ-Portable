@@ -3776,7 +3776,7 @@ void Challenge::ScaryPotterFillColumnWithPlant(int theCol, SeedType theSeedType,
 	for (int i = 0; i < MAX_GRID_SIZE_Y - 1; i++)
 	{
 		Plant* aPlant = mBoard->NewPlant(theCol, i, theSeedType, SeedType::SEED_NONE);
-		if (theSeedType == SeedType::SEED_POTATOMINE)
+		if (aPlant != nullptr && theSeedType == SeedType::SEED_POTATOMINE)
 		{
 			aPlant->mStateCountdown = 10;
 		}

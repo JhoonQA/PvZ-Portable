@@ -541,7 +541,8 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
                 aPosition++;
             }
             PVZP_ASSERT(aPosition < 3);
-            theParentZombie->mFollowerZombieID[aPosition] = mBoard->ZombieGetID(this);
+            if (mBodyReanimID != ReanimationID::REANIMATIONID_NULL)
+                theParentZombie->mFollowerZombieID[aPosition] = mBoard->ZombieGetID(this);
             mRelatedZombieID = mBoard->ZombieGetID(theParentZombie);
 
             mPosX = theParentZombie->mPosX + (aPosition + 1) * 50;

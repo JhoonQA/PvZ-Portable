@@ -3972,6 +3972,10 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 	if (mPlants.mSize >= mPlants.mMaxSize)
 		return;
 
+	// AddPlant needs a body reanimation slot; bail before killing old plants or charging sun.
+	if (mApp->mEffectSystem->mReanimationHolder->mReanimations.mSize >= mApp->mEffectSystem->mReanimationHolder->mReanimations.mMaxSize)
+		return;
+
 	// Bank plants (no cheat, no conveyor belt): only preflight the sun cost here; it is charged after the plant is actually placed.
 	if (!mApp->mEasyPlantingCheat && mCursorObject->mCursorType == CursorType::CURSOR_TYPE_PLANT_FROM_BANK && !HasConveyorBeltSeedBank())
 	{
