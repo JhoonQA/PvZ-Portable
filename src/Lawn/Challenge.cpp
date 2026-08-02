@@ -4347,11 +4347,11 @@ ZombieType Challenge::IZombieSeedTypeToZombieType(SeedType theSeedType)
 	unreachable();
 }
 
-void Challenge::IZombiePlaceZombie(ZombieType theZombieType, int theGridX, int theGridY)
+bool Challenge::IZombiePlaceZombie(ZombieType theZombieType, int theGridX, int theGridY)
 {
 	Zombie* aZombie = mBoard->AddZombieInRow(theZombieType, theGridY, 0);
 	if (aZombie == nullptr)
-		return;
+		return false;
 
 	if (theZombieType == ZOMBIE_BUNGEE)
 	{
@@ -4365,6 +4365,7 @@ void Challenge::IZombiePlaceZombie(ZombieType theZombieType, int theGridX, int t
 	{
 		aZombie->mPosX = mBoard->GridToPixelX(theGridX, theGridY) - 30.0f;
 	}
+	return true;
 }
 
 void Challenge::IZombieMouseDownWithZombie(int theX, int theY, int theClickCount)
@@ -4378,17 +4379,23 @@ void Challenge::IZombieMouseDownWithZombie(int theX, int theY, int theClickCount
 		{
 			if (CanPlantAt(aGridX, aGridY, aSeedType) == PLANTING_OK)
 			{
-				if (mApp->mEasyPlantingCheat || mBoard->TakeSunMoney(mBoard->GetCurrentPlantCost(aSeedType, SEED_NONE)))
+				if (mApp->mEasyPlantingCheat || mBoard->CanTakeSunMoney(mBoard->GetCurrentPlantCost(aSeedType, SEED_NONE)))
 				{
 					mBoard->ClearAdvice(ADVICE_I_ZOMBIE_LEFT_OF_LINE);
 					mBoard->ClearAdvice(ADVICE_I_ZOMBIE_NOT_PASSED_LINE);
 					ZombieType aZombieType = IZombieSeedTypeToZombieType(aSeedType);
-					IZombiePlaceZombie(aZombieType, aGridX, aGridY);
+					if (IZombiePlaceZombie(aZombieType, aGridX, aGridY))
+					{
+						if (!mApp->mEasyPlantingCheat)
+						{
+							mBoard->TakeSunMoney(mBoard->GetCurrentPlantCost(aSeedType, SEED_NONE));
+						}
 
-					PVZP_ASSERT(mBoard->mCursorObject->mSeedBankIndex >= 0 && mBoard->mCursorObject->mSeedBankIndex < mBoard->mSeedBank->mNumPackets);
-					mBoard->mSeedBank->mSeedPackets[mBoard->mCursorObject->mSeedBankIndex].WasPlanted();
-					mApp->PlayFoley(FOLEY_PLANT);
-					mBoard->ClearCursor();
+						PVZP_ASSERT(mBoard->mCursorObject->mSeedBankIndex >= 0 && mBoard->mCursorObject->mSeedBankIndex < mBoard->mSeedBank->mNumPackets);
+						mBoard->mSeedBank->mSeedPackets[mBoard->mCursorObject->mSeedBankIndex].WasPlanted();
+						mApp->PlayFoley(FOLEY_PLANT);
+						mBoard->ClearCursor();
+					}
 				}
 			}
 			else

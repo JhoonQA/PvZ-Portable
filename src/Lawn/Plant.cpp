@@ -1148,7 +1148,8 @@ void Plant::UpdateGraveBuster()
 {
     if (mState == PlantState::STATE_GRAVEBUSTER_LANDING)
     {
-        if (mApp->ReanimationGet(mBodyReanimID)->mLoopCount > 0)
+        Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
+        if (aBodyReanim && aBodyReanim->mLoopCount > 0)
         {
             PlayBodyReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 10, 12.0f);
             mStateCountdown = 400;
@@ -3337,11 +3338,11 @@ void Plant::UpdateShooting()
         {
             Reanimation* aHeadBackReanim = mApp->ReanimationTryToGet(mHeadReanimID2);
             Reanimation* aHeadFrontReanim = mApp->ReanimationTryToGet(mHeadReanimID);
-            if (aHeadFrontReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mLaunchCounter > 25)
+            if (aHeadFrontReanim && aHeadFrontReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mLaunchCounter > 25)
             {
                 Fire(nullptr, mRow, PlantWeapon::WEAPON_PRIMARY);
             }
-            if (aHeadBackReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+            if (aHeadBackReanim && aHeadBackReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
             {
                 Fire(nullptr, mRow, PlantWeapon::WEAPON_SECONDARY);
             }
@@ -3380,58 +3381,73 @@ void Plant::UpdateShooting()
     Reanimation* aHeadReanim = mApp->ReanimationTryToGet(mHeadReanimID);
     if (mSeedType == SeedType::SEED_THREEPEATER)
     {
-        Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-        Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
+        Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+        Reanimation* aHeadReanim3 = mApp->ReanimationTryToGet(mHeadReanimID3);
 
-        if (aHeadReanim2->mLoopCount > 0)
+        if (aHeadReanim2 && aHeadReanim2->mLoopCount > 0)
         {
-            if (aHeadReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+            if (aHeadReanim && aHeadReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
             {
                 aHeadReanim->StartBlend(20);
                 aHeadReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
                 aHeadReanim->SetFramesForLayer("anim_head_idle1");
-                aHeadReanim->mAnimRate = aBodyReanim->mAnimRate;
-                aHeadReanim->mAnimTime = aBodyReanim->mAnimTime;
+                if (aBodyReanim)
+                {
+                    aHeadReanim->mAnimRate = aBodyReanim->mAnimRate;
+                    aHeadReanim->mAnimTime = aBodyReanim->mAnimTime;
+                }
             }
 
             aHeadReanim2->StartBlend(20);
             aHeadReanim2->mLoopType = ReanimLoopType::REANIM_LOOP;
             aHeadReanim2->SetFramesForLayer("anim_head_idle2");
-            aHeadReanim2->mAnimRate = aBodyReanim->mAnimRate;
-            aHeadReanim2->mAnimTime = aBodyReanim->mAnimTime;
+            if (aBodyReanim)
+            {
+                aHeadReanim2->mAnimRate = aBodyReanim->mAnimRate;
+                aHeadReanim2->mAnimTime = aBodyReanim->mAnimTime;
+            }
 
-            if (aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+            if (aHeadReanim3 && aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
             {
                 aHeadReanim3->StartBlend(20);
                 aHeadReanim3->mLoopType = ReanimLoopType::REANIM_LOOP;
                 aHeadReanim3->SetFramesForLayer("anim_head_idle3");
-                aHeadReanim3->mAnimRate = aBodyReanim->mAnimRate;
-                aHeadReanim3->mAnimTime = aBodyReanim->mAnimTime;
+                if (aBodyReanim)
+                {
+                    aHeadReanim3->mAnimRate = aBodyReanim->mAnimRate;
+                    aHeadReanim3->mAnimTime = aBodyReanim->mAnimTime;
+                }
             }
-            
+
             return;
         }
     }
     else if (mSeedType == SeedType::SEED_SPLITPEA)
     {
-        Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
+        Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
 
-        if (aHeadReanim->mLoopCount > 0)
+        if (aHeadReanim && aHeadReanim->mLoopCount > 0)
         {
             aHeadReanim->StartBlend(20);
             aHeadReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
             aHeadReanim->SetFramesForLayer("anim_head_idle");
-            aHeadReanim->mAnimRate = aBodyReanim->mAnimRate;
-            aHeadReanim->mAnimTime = aBodyReanim->mAnimTime;
+            if (aBodyReanim)
+            {
+                aHeadReanim->mAnimRate = aBodyReanim->mAnimRate;
+                aHeadReanim->mAnimTime = aBodyReanim->mAnimTime;
+            }
         }
 
-        if (aHeadReanim2->mLoopCount > 0)
+        if (aHeadReanim2 && aHeadReanim2->mLoopCount > 0)
         {
             aHeadReanim2->StartBlend(20);
             aHeadReanim2->mLoopType = ReanimLoopType::REANIM_LOOP;
             aHeadReanim2->SetFramesForLayer("anim_splitpea_idle");
-            aHeadReanim2->mAnimRate = aBodyReanim->mAnimRate;
-            aHeadReanim2->mAnimTime = aBodyReanim->mAnimTime;
+            if (aBodyReanim)
+            {
+                aHeadReanim2->mAnimRate = aBodyReanim->mAnimRate;
+                aHeadReanim2->mAnimTime = aBodyReanim->mAnimTime;
+            }
         }
 
         return;

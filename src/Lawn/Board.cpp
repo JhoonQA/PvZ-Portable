@@ -1683,7 +1683,6 @@ void Board::PlaceRake()
 	if (mGridItems.mSize >= mGridItems.mMaxSize)
 		return;
 
-	mApp->mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_RAKE]--;
 	GridItem* aRake = mGridItems.DataArrayAlloc();
 	aRake->mGridItemType = GridItemType::GRIDITEM_RAKE;
 	aRake->mGridX = aGridX;
@@ -1698,6 +1697,7 @@ void Board::PlaceRake()
 		return;
 	}
 
+	mApp->mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_RAKE]--;
 	aRake->mGridItemReanimID = mApp->ReanimationGetID(aRakeReanim);
 	aRake->mGridItemState = GridItemState::GRIDITEM_STATE_RAKE_ATTRACTING;
 }
@@ -2147,6 +2147,11 @@ Plant* Board::NewPlant(int theGridX, int theGridY, SeedType theSeedType, SeedTyp
 
 	aPlant->mIsOnBoard = true;
 	aPlant->PlantInitialize(theGridX, theGridY, theSeedType, theImitaterType);
+	if (aPlant->mBodyReanimID == ReanimationID::REANIMATIONID_NULL)
+	{
+		aPlant->mDead = true;
+		return nullptr;
+	}
 	return aPlant;
 }
 
@@ -2763,7 +2768,7 @@ bool Board::CanAddBobSled()
 // GOTY @Patoke: 0x410700
 Zombie* Board::AddZombieInRow(ZombieType theZombieType, int theRow, int theFromWave)
 {
-	const int aRequiredSlots = (theZombieType == ZombieType::ZOMBIE_BOBSLED) ? 4 : 1; // bobsled spawns 3 followers
+	const int aRequiredSlots = (theZombieType == ZombieType::ZOMBIE_BOBSLED) ? 4 : 1; // sled + 3 followers; the unchecked follower allocs below rely on this
 	if (mZombies.mSize >= mZombies.mMaxSize - aRequiredSlots)
 	{
 		PvzpTrace("Too many zombies!!");
@@ -2779,11 +2784,21 @@ Zombie* Board::AddZombieInRow(ZombieType theZombieType, int theRow, int theFromW
 	bool aVariant = !Rand(5);
 	Zombie* aZombie = mZombies.DataArrayAlloc();
 	aZombie->ZombieInitialize(theRow, theZombieType, aVariant, nullptr, theFromWave);
+	if (aZombie->mBodyReanimID == ReanimationID::REANIMATIONID_NULL)
+	{
+		aZombie->mDead = true;
+		return nullptr; // no body reanimation: the spawn fails outright
+	}
 	if (theZombieType == ZombieType::ZOMBIE_BOBSLED && aZombie->IsOnBoard())
 	{
 		for (int _i = 0; _i < 3; _i++)
 		{
-			mZombies.DataArrayAlloc()->ZombieInitialize(theRow, ZombieType::ZOMBIE_BOBSLED, false, aZombie, theFromWave);
+			Zombie* aFollowerZombie = mZombies.DataArrayAlloc();
+			aFollowerZombie->ZombieInitialize(theRow, ZombieType::ZOMBIE_BOBSLED, false, aZombie, theFromWave);
+			if (aFollowerZombie->mBodyReanimID == ReanimationID::REANIMATIONID_NULL)
+			{
+				aFollowerZombie->mDead = true;
+			}
 		}
 	}
 	return aZombie;
