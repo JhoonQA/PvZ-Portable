@@ -3968,12 +3968,13 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 	ClearAdvice(AdviceType::ADVICE_PLANT_POTATOE_MINE_ON_LILY);
 	ClearAdvice(AdviceType::ADVICE_SURVIVE_FLAGS);
 
-	// Plant cap reached: bail out before any charge.
-	if (mPlants.mSize >= mPlants.mMaxSize)
+	// Plant cap reached: bail out before any charge. The glove only moves an existing plant, so it allocates no slot.
+	if (mCursorObject->mCursorType != CursorType::CURSOR_TYPE_PLANT_FROM_GLOVE && mPlants.mSize >= mPlants.mMaxSize)
 		return;
 
 	// AddPlant needs a body reanimation slot; bail before killing old plants or charging sun.
-	if (mApp->mEffectSystem->mReanimationHolder->mReanimations.mSize >= mApp->mEffectSystem->mReanimationHolder->mReanimations.mMaxSize)
+	if (mCursorObject->mCursorType != CursorType::CURSOR_TYPE_PLANT_FROM_GLOVE &&
+		mApp->mEffectSystem->mReanimationHolder->mReanimations.mSize >= mApp->mEffectSystem->mReanimationHolder->mReanimations.mMaxSize)
 		return;
 
 	// Bank plants (no cheat, no conveyor belt): only preflight the sun cost here; it is charged after the plant is actually placed.
@@ -3981,6 +3982,8 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 	{
 		if (!CanTakeSunMoney(GetCurrentPlantCost(aPlantingSeedType, SeedType::SEED_NONE)))
 		{
+			mApp->PlaySample(Sexy::SOUND_BUZZER);
+			mOutOfMoneyCounter = 70;
 			return;
 		}
 	}
@@ -5009,6 +5012,10 @@ void Board::BungeeDropZombie(BungeeDropGrid* theBungeeDropGrid, ZombieType theZo
 	Zombie* aZombie = AddZombie(theZombieType, mCurrentWave);
 	if (aBungeeZombie == nullptr || aZombie == nullptr)
 	{
+		if (aBungeeZombie)
+		{
+			aBungeeZombie->mDead = true;
+		}
 		return;
 	}
 
@@ -5634,12 +5641,15 @@ void Board::UpdateIce()
 				{
 					int aRenderPosition = MakeRenderOrder(RenderLayer::RENDER_LAYER_GROUND, aRow, 3);
 					aParticleIce = mApp->AddPvzpParticle(aPosX, aPosY, aRenderPosition, ParticleEffect::PARTICLE_ICE_SPARKLE);
-					mIceParticleID[aRow] = mApp->ParticleGetID(aParticleIce);
+					mIceParticleID[aRow] = aParticleIce ? mApp->ParticleGetID(aParticleIce) : ParticleSystemID::PARTICLESYSTEMID_NULL;
 				}
 			}
 
 			int anAlpha = std::clamp(mIceTimer[aRow] / 10, 0, 255);
-			aParticleIce->OverrideColor(nullptr, Color(255, 255, 255, anAlpha));
+			if (aParticleIce)
+			{
+				aParticleIce->OverrideColor(nullptr, Color(255, 255, 255, anAlpha));
+			}
 		}
 	}
 }

@@ -217,9 +217,10 @@ Plant* ZenGarden::PlacePottedPlant(intptr_t thePottedPlantIndex)
         needPot = false;
     }
 
+    Plant* aPot = nullptr;
     if (needPot)
     {
-        Plant* aPot = mBoard->NewPlant(aPottedPlant->mX, aPottedPlant->mY, SeedType::SEED_FLOWERPOT, SeedType::SEED_NONE);
+        aPot = mBoard->NewPlant(aPottedPlant->mX, aPottedPlant->mY, SeedType::SEED_FLOWERPOT, SeedType::SEED_NONE);
         if (aPot)
         {
             aPot->mRenderOrder = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, 0, aPot->mY);
@@ -239,7 +240,11 @@ Plant* ZenGarden::PlacePottedPlant(intptr_t thePottedPlantIndex)
 
     Plant* aPlant = mBoard->NewPlant(aPottedPlant->mX, aPottedPlant->mY, aSeedType, SeedType::SEED_NONE);
     if (aPlant == nullptr)
+    {
+        if (aPot)
+            aPot->Die();
         return nullptr;
+    }
 
     aPlant->mPottedPlantIndex = thePottedPlantIndex;
     aPlant->mRenderOrder = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, 0, aPlant->mY + 1);
@@ -486,8 +491,11 @@ void ZenGarden::MouseDownWithMoneySign(Plant* thePlant)
     aMessageText = PvzpReplaceString(aMessageText, "{PLANT_TYPE}", aPlantName);
 
     mApp->CrazyDaveTalkMessage(aMessageText);
-    Reanimation* aCrazyDaveReanim = mApp->ReanimationGet(mApp->mCrazyDaveReanimID);
-    aCrazyDaveReanim->PlayReanim("anim_blahblah", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 20, 12.0f);
+    Reanimation* aCrazyDaveReanim = mApp->ReanimationTryToGet(mApp->mCrazyDaveReanimID);
+    if (aCrazyDaveReanim)
+    {
+        aCrazyDaveReanim->PlayReanim("anim_blahblah", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 20, 12.0f);
+    }
 
     Dialog* aDialog = mApp->DoDialog(Dialogs::DIALOG_ZEN_SELL, true, aHeader, aLines, "", Dialog::BUTTONS_YES_NO);
     aDialog->mX += 120;
@@ -1584,15 +1592,16 @@ void ZenGarden::StinkyUpdate(GridItem* theStinky)
     if (theStinky->mGridItemState == GridItemState::GRIDITEM_STINKY_SLEEPING)
     {
         Reanimation* aSleepingReanim = FindReanimAttachment(aStinkyReanim->GetTrackInstanceByName("shell")->mAttachmentID);
-        PVZP_ASSERT(aSleepingReanim);
-
-        if (mBoard->mCursorObject->mCursorType == CursorType::CURSOR_TYPE_CHOCOLATE)
+        if (aSleepingReanim)
         {
-            aSleepingReanim->AssignRenderGroupToPrefix("z", RENDER_GROUP_HIDDEN);
-        }
-        else
-        {
-            aSleepingReanim->AssignRenderGroupToPrefix("z", RENDER_GROUP_NORMAL);
+            if (mBoard->mCursorObject->mCursorType == CursorType::CURSOR_TYPE_CHOCOLATE)
+            {
+                aSleepingReanim->AssignRenderGroupToPrefix("z", RENDER_GROUP_HIDDEN);
+            }
+            else
+            {
+                aSleepingReanim->AssignRenderGroupToPrefix("z", RENDER_GROUP_NORMAL);
+            }
         }
 
         if (ShouldStinkyBeAwake())

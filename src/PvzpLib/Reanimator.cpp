@@ -1460,7 +1460,11 @@ void Reanimation::UpdateAttacherTrack(int theTrackIndex)
 
 		aAttachReanim->mLoopType = aAttacherInfo.mLoopType;
 		aAttachReanim->mAnimRate = aAttacherInfo.mAnimRate;
-		AttachReanim(aTrackInstance->mAttachmentID, aAttachReanim, 0.0f, 0.0f);
+		if (AttachReanim(aTrackInstance->mAttachmentID, aAttachReanim, 0.0f, 0.0f) == nullptr)
+		{
+			aAttachReanim->ReanimationDie();
+			return;
+		}
 		mFrameBasePose = NO_BASE_POSE;  // 设定附属动画后，自身不再存在基准帧
 	}
 

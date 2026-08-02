@@ -982,6 +982,8 @@ AttachEffect* AttachReanim(AttachmentID& theAttachmentID, Reanimation* theReanim
 
 	unsigned int aReanimId = gEffectSystem->mReanimationHolder->mReanimations.DataArrayGetID(theReanimation);
 	AttachEffect* aAttachEffect = CreateEffectAttachment(theAttachmentID, EffectType::EFFECT_REANIM, aReanimId, theOffsetX, theOffsetY);
+	if (aAttachEffect == nullptr)
+		return nullptr;
 
 	PVZP_ASSERT(!theReanimation->mIsAttachment);
 	theReanimation->mIsAttachment = true;
@@ -996,6 +998,8 @@ AttachEffect* AttachParticle(AttachmentID& theAttachmentID, PvzpParticleSystem* 
 
 	unsigned int aParticleId = gEffectSystem->mParticleHolder->mParticleSystems.DataArrayGetID(theParticleSystem);
 	AttachEffect* aAttachEffect = CreateEffectAttachment(theAttachmentID, EffectType::EFFECT_PARTICLE, aParticleId, theOffsetX, theOffsetY);
+	if (aAttachEffect == nullptr)
+		return nullptr;
 
 	PVZP_ASSERT(!theParticleSystem->mIsAttachment);
 	theParticleSystem->mIsAttachment = true;
@@ -1007,6 +1011,8 @@ AttachEffect* AttachTrail(AttachmentID& theAttachmentID, Trail* theTrail, float 
 {
 	unsigned int aTrailId = gEffectSystem->mTrailHolder->mTrails.DataArrayGetID(theTrail);
 	AttachEffect* aAttachEffect = CreateEffectAttachment(theAttachmentID, EffectType::EFFECT_TRAIL, aTrailId, theOffsetX, theOffsetY);
+	if (aAttachEffect == nullptr)
+		return nullptr;
 
 	PVZP_ASSERT(!theTrail->mIsAttachment);
 	theTrail->mIsAttachment = true;

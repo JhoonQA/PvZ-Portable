@@ -163,7 +163,7 @@ public:
     Zombie*                 ZombiquariumSpawnSnorkle();
     void                    ZombiquariumPacketClicked(SeedPacket* theSeedPacket);
     void                    ZombiquariumMouseDown(int x, int y);
-    void                    ZombiquariumDropBrain(int x, int y);
+    GridItem*               ZombiquariumDropBrain(int x, int y);
     void                    ZombiquariumUpdate();
     /*inline*/ void         ShovelAddWallnuts();
     void                    ScaryPotterPlacePot(ScaryPotType theScaryPotType, ZombieType theZombieType, SeedType theSeedType, int theCount, PvzpWeightedGridArray* theGridArray, int theGridArrayCount);

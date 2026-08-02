@@ -1122,8 +1122,11 @@ void CutScene::AnimateBoard()
 			if (mApp->mGameMode == GameMode::GAMEMODE_UPSELL)
 			{
 				Reanimation* aDaveReanim = mApp->ReanimationTryToGet(mApp->mCrazyDaveReanimID);
-				aDaveReanim->PlayReanim("anim_enterup", REANIM_PLAY_ONCE_AND_HOLD, 0, 12);
-				aDaveReanim->SetPosition(150, 70);
+				if (aDaveReanim)
+				{
+					aDaveReanim->PlayReanim("anim_enterup", REANIM_PLAY_ONCE_AND_HOLD, 0, 12);
+					aDaveReanim->SetPosition(150, 70);
+				}
 			}
 		}
 
@@ -1635,7 +1638,10 @@ void CutScene::AdvanceCrazyDaveDialog(bool theJustSkipping)
 		if (mApp->IsFinalBossLevel() && mApp->IsAdventureMode())
 		{
 			Reanimation* aCrazyDaveReanim = mApp->ReanimationTryToGet(mApp->mCrazyDaveReanimID);
-			aCrazyDaveReanim->PlayReanim("anim_grab", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 18.0f);
+			if (aCrazyDaveReanim)
+			{
+				aCrazyDaveReanim->PlayReanim("anim_grab", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 18.0f);
+			}
 
 			mApp->mMusic->FadeOut(50);
 			if (!theJustSkipping)
@@ -2207,6 +2213,9 @@ void CutScene::UpdateUpsell()
 	{
 	case 3305:  // “像这个！”
 	{
+		if (aCrazyDaveReanim == nullptr)
+			break;
+
 		Reanimation* aReanimSquash = mApp->AddReanimation(0, 0, 0, ReanimationType::REANIM_SQUASH);
 		if (aReanimSquash == nullptr)
 			break;
@@ -2214,7 +2223,10 @@ void CutScene::UpdateUpsell()
 		aReanimSquash->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, 15.0f);
 		AttachEffect* anAttachEffect = AttachReanim(aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand")->mAttachmentID, aReanimSquash, 92.0f, 387.0f);
 		if (anAttachEffect == nullptr)
+		{
+			aReanimSquash->ReanimationDie();
 			break;
+		}
 
 		anAttachEffect->mOffset.m00 = 1.2f;
 		anAttachEffect->mOffset.m11 = 1.2f;
@@ -2224,6 +2236,9 @@ void CutScene::UpdateUpsell()
 
 	case 3306:  // “还有这个！”
 	{
+		if (aCrazyDaveReanim == nullptr)
+			break;
+
 		Reanimation* aReanimThreepeater = mApp->AddReanimation(0, 0, 0, ReanimationType::REANIM_THREEPEATER);
 		if (aReanimThreepeater == nullptr)
 			break;
@@ -2239,10 +2254,18 @@ void CutScene::UpdateUpsell()
 			aReanimHead->mAnimRate = aReanimThreepeater->mAnimRate;
 			aReanimHead->SetFramesForLayer(StrFormat("anim_head_idle%d", i).c_str());
 			aReanimHead->AttachToAnotherReanimation(aReanimThreepeater, StrFormat("anim_head%d", i).c_str());
+			if (!aReanimHead->mIsAttachment)
+			{
+				aReanimHead->ReanimationDie();
+				break;
+			}
 		}
 		AttachEffect* anAttachEffect = AttachReanim(aCrazyDaveReanim->GetTrackInstanceByName("Dave_body1")->mAttachmentID, aReanimThreepeater, 0.0f, 0.0f);
 		if (anAttachEffect == nullptr)
+		{
+			aReanimThreepeater->ReanimationDie();
 			break;
+		}
 
 		PvzpScaleRotateTransformMatrix(anAttachEffect->mOffset, -70.0f, 260.0f, 0.5f, 1.2f, 1.2f);
 		aCrazyDaveReanim->Update();
@@ -2252,6 +2275,9 @@ void CutScene::UpdateUpsell()
 
 	case 3307:  // “过会儿，我还会添加这个！”
 	{
+		if (aCrazyDaveReanim == nullptr)
+			break;
+
 		Reanimation* aReanimMagnet = mApp->AddReanimation(0, 0, 0, ReanimationType::REANIM_MAGNETSHROOM);
 		if (aReanimMagnet == nullptr)
 			break;
@@ -2260,7 +2286,10 @@ void CutScene::UpdateUpsell()
 		PvzpScaleRotateTransformMatrix(aReanimMagnet->mOverlayMatrix, 0, 0, 0.3f, 1, 1);
 		AttachEffect* anAttachEffect = AttachReanim(aCrazyDaveReanim->GetTrackInstanceByName("Dave_pot")->mAttachmentID, aReanimMagnet, 25.0f, 49.0f);
 		if (anAttachEffect == nullptr)
+		{
+			aReanimMagnet->ReanimationDie();
 			break;
+		}
 
 		anAttachEffect->mOffset.m00 = 1.2f;
 		anAttachEffect->mOffset.m11 = 1.2f;
@@ -2269,8 +2298,19 @@ void CutScene::UpdateUpsell()
 	}
 
 	case 3309:  // “因为我很疯-狂-！！！！”
-		aCrazyDaveReanim->FindSubReanim(ReanimationType::REANIM_THREEPEATER)->ReanimationDie();
-		aCrazyDaveReanim->FindSubReanim(ReanimationType::REANIM_MAGNETSHROOM)->ReanimationDie();
+		if (aCrazyDaveReanim)
+		{
+			Reanimation* aThreepeaterReanim = aCrazyDaveReanim->FindSubReanim(ReanimationType::REANIM_THREEPEATER);
+			if (aThreepeaterReanim)
+			{
+				aThreepeaterReanim->ReanimationDie();
+			}
+			Reanimation* aMagnetReanim = aCrazyDaveReanim->FindSubReanim(ReanimationType::REANIM_MAGNETSHROOM);
+			if (aMagnetReanim)
+			{
+				aMagnetReanim->ReanimationDie();
+			}
+		}
 		break;
 
 	case 3312:  // “我要给你更多战斗！”

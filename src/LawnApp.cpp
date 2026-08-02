@@ -2668,9 +2668,12 @@ void LawnApp::CrazyDaveTalkIndex(int theMessageIndex)
 
 void LawnApp::CrazyDaveDoneHanding()
 {
-	Reanimation* aCrazyDaveReanim = ReanimationGet(mCrazyDaveReanimID);
-	ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
-	AttachmentDie(aHandTrackInstance->mAttachmentID);
+	Reanimation* aCrazyDaveReanim = ReanimationTryToGet(mCrazyDaveReanimID);
+	if (aCrazyDaveReanim)
+	{
+		ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
+		AttachmentDie(aHandTrackInstance->mAttachmentID);
+	}
 
 	PvzpTrace("DoneHanding");
 }
@@ -2685,7 +2688,12 @@ void LawnApp::CrazyDaveStopSound()
 
 void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 {
-	Reanimation* aCrazyDaveReanim = ReanimationGet(mCrazyDaveReanimID);
+	Reanimation* aCrazyDaveReanim = ReanimationTryToGet(mCrazyDaveReanimID);
+	if (aCrazyDaveReanim == nullptr)
+	{
+		mCrazyDaveMessageText = theMessage;
+		return;
+	}
 
 	bool doHanding = false;
 	if (theMessage.find("{HANDING}") != std::string::npos)
@@ -2789,21 +2797,25 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aWallnutReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_WALLNUT);
-			if (!aWallnutReanim)
-				return;
+			if (aWallnutReanim)
+			{
+				aWallnutReanim->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, 12.0f);
+				PvzpTrace("Handed");
 
-			aWallnutReanim->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, 12.0f);
-			PvzpTrace("Handed");
+				ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
+				AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aWallnutReanim, 100.0f, 393.0f);
+				if (aAttachEffect)
+				{
+					aAttachEffect->mOffset.m00 = 1.2f;
+					aAttachEffect->mOffset.m11 = 1.2f;
 
-			ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
-			AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aWallnutReanim, 100.0f, 393.0f);
-			if (!aAttachEffect)
-				return;
-
-			aAttachEffect->mOffset.m00 = 1.2f;
-			aAttachEffect->mOffset.m11 = 1.2f;
-
-			aCrazyDaveReanim->Update();
+					aCrazyDaveReanim->Update();
+				}
+				else
+				{
+					aWallnutReanim->ReanimationDie();
+				}
+			}
 
 			if (doSound)
 			{
@@ -2817,21 +2829,25 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aHammerReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_HAMMER);
-			if (!aHammerReanim)
-				return;
+			if (aHammerReanim)
+			{
+				aHammerReanim->PlayReanim("anim_whack_zombie", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
+				aHammerReanim->mAnimTime = 1.0f;
 
-			aHammerReanim->PlayReanim("anim_whack_zombie", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
-			aHammerReanim->mAnimTime = 1.0f;
+				ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
+				AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aHammerReanim, 62.0f, 445.0f);
+				if (aAttachEffect)
+				{
+					aAttachEffect->mOffset.m00 = 1.5f;
+					aAttachEffect->mOffset.m11 = 1.5f;
 
-			ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
-			AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aHammerReanim, 62.0f, 445.0f);
-			if (!aAttachEffect)
-				return;
-
-			aAttachEffect->mOffset.m00 = 1.5f;
-			aAttachEffect->mOffset.m11 = 1.5f;
-
-			aCrazyDaveReanim->Update();
+					aCrazyDaveReanim->Update();
+				}
+				else
+				{
+					aHammerReanim->ReanimationDie();
+				}
+			}
 
 			if (doSound)
 			{
@@ -2845,15 +2861,22 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aFertilizerReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_ZENGARDEN_FERTILIZER);
-			if (!aFertilizerReanim)
-				return;
+			if (aFertilizerReanim)
+			{
+				aFertilizerReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
+				aFertilizerReanim->mAnimRate = 0.0f;
 
-			aFertilizerReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
-			aFertilizerReanim->mAnimRate = 0.0f;
-
-			ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
-			AttachReanim(aHandTrackInstance->mAttachmentID, aFertilizerReanim, 102.0f, 412.0f);
-			aCrazyDaveReanim->Update();
+				ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
+				AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aFertilizerReanim, 102.0f, 412.0f);
+				if (aAttachEffect)
+				{
+					aCrazyDaveReanim->Update();
+				}
+				else
+				{
+					aFertilizerReanim->ReanimationDie();
+				}
+			}
 
 			if (doSound)
 			{
@@ -2867,15 +2890,22 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aTreeFoodReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_TREEOFWISDOM_TREEFOOD);
-			if (!aTreeFoodReanim)
-				return;
+			if (aTreeFoodReanim)
+			{
+				aTreeFoodReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
+				aTreeFoodReanim->mAnimRate = 0.0f;
 
-			aTreeFoodReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
-			aTreeFoodReanim->mAnimRate = 0.0f;
-
-			ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
-			AttachReanim(aHandTrackInstance->mAttachmentID, aTreeFoodReanim, 102.0f, 412.0f);
-			aCrazyDaveReanim->Update();
+				ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
+				AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aTreeFoodReanim, 102.0f, 412.0f);
+				if (aAttachEffect)
+				{
+					aCrazyDaveReanim->Update();
+				}
+				else
+				{
+					aTreeFoodReanim->ReanimationDie();
+				}
+			}
 
 			if (doSound)
 			{
@@ -2889,16 +2919,23 @@ void LawnApp::CrazyDaveTalkMessage(const std::string& theMessage)
 			aCrazyDaveReanim->PlayReanim("anim_talk_handing", ReanimLoopType::REANIM_LOOP, 50, 12.0f);
 
 			Reanimation* aMoneyBagReanim = AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_ZENGARDEN_FERTILIZER);
-			if (!aMoneyBagReanim)
-				return;
+			if (aMoneyBagReanim)
+			{
+				aMoneyBagReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
+				aMoneyBagReanim->mAnimRate = 0.0f;
+				aMoneyBagReanim->SetImageOverride("bag", IMAGE_MONEYBAG);
 
-			aMoneyBagReanim->PlayReanim("bag", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
-			aMoneyBagReanim->mAnimRate = 0.0f;
-			aMoneyBagReanim->SetImageOverride("bag", IMAGE_MONEYBAG);
-
-			ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
-			AttachReanim(aHandTrackInstance->mAttachmentID, aMoneyBagReanim, 90.0f, 405.0f);
-			aCrazyDaveReanim->Update();
+				ReanimatorTrackInstance* aHandTrackInstance = aCrazyDaveReanim->GetTrackInstanceByName("Dave_handinghand");
+				AttachEffect* aAttachEffect = AttachReanim(aHandTrackInstance->mAttachmentID, aMoneyBagReanim, 90.0f, 405.0f);
+				if (aAttachEffect)
+				{
+					aCrazyDaveReanim->Update();
+				}
+				else
+				{
+					aMoneyBagReanim->ReanimationDie();
+				}
+			}
 			/*
 			v16 = Reanimation::GetTrackInstanceByName(v3, "Dave_handinghand");
 			theAnimRate = 405.0;
@@ -2964,16 +3001,25 @@ void LawnApp::CrazyDaveStopTalking()
 		CrazyDaveDoneHanding();
 	}
 
-	Reanimation* aCrazyDaveReanim = ReanimationGet(mCrazyDaveReanimID);
-	aCrazyDaveReanim->SetImageOverride("Dave_mouths", nullptr);
+	Reanimation* aCrazyDaveReanim = ReanimationTryToGet(mCrazyDaveReanimID);
+	if (aCrazyDaveReanim)
+	{
+		aCrazyDaveReanim->SetImageOverride("Dave_mouths", nullptr);
+	}
 	if (mCrazyDaveState == CrazyDaveState::CRAZY_DAVE_HANDING_TALKING && !aDoneHanding)
 	{
-		aCrazyDaveReanim->PlayReanim("anim_idle_handing", ReanimLoopType::REANIM_LOOP, 20, 12.0f);
+		if (aCrazyDaveReanim)
+		{
+			aCrazyDaveReanim->PlayReanim("anim_idle_handing", ReanimLoopType::REANIM_LOOP, 20, 12.0f);
+		}
 		mCrazyDaveState = CrazyDaveState::CRAZY_DAVE_HANDING_IDLING;
 	}
 	else if (mCrazyDaveState == CrazyDaveState::CRAZY_DAVE_TALKING || mCrazyDaveState == CrazyDaveState::CRAZY_DAVE_HANDING_TALKING)
 	{
-		aCrazyDaveReanim->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 20, 12.0f);
+		if (aCrazyDaveReanim)
+		{
+			aCrazyDaveReanim->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 20, 12.0f);
+		}
 		mCrazyDaveState = CrazyDaveState::CRAZY_DAVE_IDLING;
 	}
 

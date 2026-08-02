@@ -352,9 +352,12 @@ Challenge::Challenge()
 		Rect aHandleRect = SlotMachineGetHandleRect();
 		ReanimatorEnsureDefinitionLoaded(REANIM_SLOT_MACHINE_HANDLE, true);
 		Reanimation* aHandleReanim = mApp->AddReanimation(aHandleRect.mX - 377, aHandleRect.mY - 20, 0, REANIM_SLOT_MACHINE_HANDLE);
-		aHandleReanim->mIsAttachment = true;
-		aHandleReanim->mAnimRate = 0;
-		mReanimChallenge = mApp->ReanimationGetID(aHandleReanim);
+		if (aHandleReanim)
+		{
+			aHandleReanim->mIsAttachment = true;
+			aHandleReanim->mAnimRate = 0;
+			mReanimChallenge = mApp->ReanimationGetID(aHandleReanim);
+		}
 	}
 }
 
@@ -1207,7 +1210,9 @@ int Challenge::UpdateToolTip(int theX, int theY)
 
 void Challenge::MouseDownWhackAZombie(int theX, int theY)
 {
-	mApp->ReanimationTryToGet(mBoard->mCursorObject->mReanimCursorID)->mAnimTime = 0.2f;
+	Reanimation* aCursorReanim = mApp->ReanimationTryToGet(mBoard->mCursorObject->mReanimCursorID);
+	if (aCursorReanim)
+		aCursorReanim->mAnimTime = 0.2f;
 	mApp->PlayFoley(FOLEY_SWING);
 
 	Zombie* aTopZombie = nullptr;
@@ -1322,7 +1327,9 @@ int Challenge::MouseDown(int x, int y, int theClickCount, HitResult* theHitResul
 				mBoard->mSeedBank->mSeedPackets[i].SlotMachineStart();
 			}
 
-			mApp->ReanimationGet(mReanimChallenge)->PlayReanim("anim_pull", REANIM_PLAY_ONCE_AND_HOLD, 0, 36.0f);
+			Reanimation* aHandleReanim = mApp->ReanimationTryToGet(mReanimChallenge);
+			if (aHandleReanim)
+				aHandleReanim->PlayReanim("anim_pull", REANIM_PLAY_ONCE_AND_HOLD, 0, 36.0f);
 			mChallengeState = STATECHALLENGE_SLOT_MACHINE_ROLLING;
 			mBoard->SetTutorialState(TUTORIAL_SLOT_MACHINE_COMPLETED);
 			mBoard->ClearAdvice(ADVICE_NONE);
@@ -2055,7 +2062,9 @@ void Challenge::UpdateSlotMachine()
 	}
 	else if (mBoard->mSeedBank->mSeedPackets[0].mSlotMachineCountDown <= 0)
 	{
-		mApp->ReanimationGet(mReanimChallenge)->PlayReanim("anim_return", REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
+		Reanimation* aHandleReanim = mApp->ReanimationTryToGet(mReanimChallenge);
+		if (aHandleReanim)
+			aHandleReanim->PlayReanim("anim_return", REANIM_PLAY_ONCE_AND_HOLD, 0, 24.0f);
 		mChallengeState = STATECHALLENGE_NORMAL;
 
 		SeedType aPacket1 = mBoard->mSeedBank->mSeedPackets[0].mPacketType;
@@ -2291,16 +2300,17 @@ void Challenge::SpawnLevelAward(int theGridX, int theGridY)
 	mApp->mBoardResult = BOARDRESULT_WON; // the win must stand even if the award coin can't spawn; the coin is only the ceremony
 	mApp->PlayFoley(FOLEY_SPAWN_SUN);
 	Coin* aCoin = mBoard->AddCoin(aPosX, aPosY, aCoinType, COIN_MOTION_COIN);
-	if (aCoin == nullptr)
-		return;
-
-	mApp->AddPvzpParticle(BOARD_WIDTH / 2, BOARD_HEIGHT / 2, RENDER_LAYER_TOP, PARTICLE_SCREEN_FLASH);
-
-	if (mApp->mGameMode == GAMEMODE_CHALLENGE_ZOMBIQUARIUM)
+	if (aCoin)
 	{
-		aCoin->Collect();
+		mApp->AddPvzpParticle(BOARD_WIDTH / 2, BOARD_HEIGHT / 2, RENDER_LAYER_TOP, PARTICLE_SCREEN_FLASH);
+
+		if (mApp->mGameMode == GAMEMODE_CHALLENGE_ZOMBIQUARIUM)
+		{
+			aCoin->Collect();
+		}
 	}
-	else if (!mApp->IsIZombieLevel())
+
+	if (mApp->mGameMode != GAMEMODE_CHALLENGE_ZOMBIQUARIUM && !mApp->IsIZombieLevel())
 	{
 		for (Zombie* aZombie : mBoard->mZombies)
 		{
@@ -2413,7 +2423,9 @@ void Challenge::DrawSlotMachine(Graphics* g)
 	}
 	gBoardParent.mTransX = mBoard->mSeedBank->mX - mBoard->mX;
 	gBoardParent.mTransY = mBoard->mSeedBank->mY - mBoard->mY;
-	mApp->ReanimationGet(mReanimChallenge)->Draw(&gBoardParent);
+	Reanimation* aHandleReanim = mApp->ReanimationTryToGet(mReanimChallenge);
+	if (aHandleReanim)
+		aHandleReanim->Draw(&gBoardParent);
 }
 
 void Challenge::DrawBackdrop(Graphics* g)
@@ -3166,32 +3178,44 @@ void Challenge::PortalStart()
 	GridItem* aPortal;
 	
 	aPortal = mBoard->mGridItems.DataArrayAlloc();
-	aPortal->mGridItemType = GRIDITEM_PORTAL_SQUARE;
-	aPortal->mGridX = 2;
-	aPortal->mGridY = 0;
-	aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
-	aPortal->OpenPortal();
+	if (aPortal)
+	{
+		aPortal->mGridItemType = GRIDITEM_PORTAL_SQUARE;
+		aPortal->mGridX = 2;
+		aPortal->mGridY = 0;
+		aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
+		aPortal->OpenPortal();
+	}
 
 	aPortal = mBoard->mGridItems.DataArrayAlloc();
-	aPortal->mGridItemType = GRIDITEM_PORTAL_SQUARE;
-	aPortal->mGridX = 9;
-	aPortal->mGridY = 1;
-	aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
-	aPortal->OpenPortal();
+	if (aPortal)
+	{
+		aPortal->mGridItemType = GRIDITEM_PORTAL_SQUARE;
+		aPortal->mGridX = 9;
+		aPortal->mGridY = 1;
+		aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
+		aPortal->OpenPortal();
+	}
 
 	aPortal = mBoard->mGridItems.DataArrayAlloc();
-	aPortal->mGridItemType = GRIDITEM_PORTAL_CIRCLE;
-	aPortal->mGridX = 9;
-	aPortal->mGridY = 3;
-	aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
-	aPortal->OpenPortal();
+	if (aPortal)
+	{
+		aPortal->mGridItemType = GRIDITEM_PORTAL_CIRCLE;
+		aPortal->mGridX = 9;
+		aPortal->mGridY = 3;
+		aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
+		aPortal->OpenPortal();
+	}
 
 	aPortal = mBoard->mGridItems.DataArrayAlloc();
-	aPortal->mGridItemType = GRIDITEM_PORTAL_CIRCLE;
-	aPortal->mGridX = 2;
-	aPortal->mGridY = 4;
-	aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
-	aPortal->OpenPortal();
+	if (aPortal)
+	{
+		aPortal->mGridItemType = GRIDITEM_PORTAL_CIRCLE;
+		aPortal->mGridX = 2;
+		aPortal->mGridY = 4;
+		aPortal->mRenderOrder = mBoard->MakeRenderOrder(RENDER_LAYER_PARTICLE, aPortal->mGridY, 0);
+		aPortal->OpenPortal();
+	}
 
 	mBoard->mZombieCountDown = 200;
 	mBoard->mZombieCountDownStart = mBoard->mZombieCountDown;
@@ -3551,6 +3575,9 @@ void Challenge::BeghouledPacketClicked(SeedPacket* theSeedPacket)
 	}
 	else if (aUpgrade != -1 && !mBeghouledPurcasedUpgrade[aUpgrade])
 	{
+		if (mApp->mEffectSystem->mReanimationHolder->mReanimations.mSize >= mApp->mEffectSystem->mReanimationHolder->mReanimations.mMaxSize)
+			return;
+
 		mBeghouledPurcasedUpgrade[aUpgrade] = true;
 		const SeedType gUpgradableSeedTypes[3] = { SEED_PEASHOOTER, SEED_PUFFSHROOM, SEED_WALLNUT };
 		SeedType aSeedPrimary = gUpgradableSeedTypes[aUpgrade];
@@ -3621,16 +3648,16 @@ void Challenge::ZombiquariumPacketClicked(SeedPacket* theSeedPacket)
 			if (mBoard->CountZombiesOnScreen() > 100)
 				return;
 
-			if (mBoard->mTutorialState == TUTORIAL_ZOMBIQUARIUM_BUY_SNORKEL)
-			{
-				mBoard->ClearAdvice(ADVICE_ZOMBIQUARIUM_BUY_SNORKEL);
-				mBoard->TutorialArrowRemove();
-				mBoard->mTutorialState = TUTORIAL_ZOMBIQUARIUM_BOUGHT_SNORKEL;
-			}
-
 			Zombie* aZombie = ZombiquariumSpawnSnorkle();
 			if (aZombie)
 			{
+				if (mBoard->mTutorialState == TUTORIAL_ZOMBIQUARIUM_BUY_SNORKEL)
+				{
+					mBoard->ClearAdvice(ADVICE_ZOMBIQUARIUM_BUY_SNORKEL);
+					mBoard->TutorialArrowRemove();
+					mBoard->mTutorialState = TUTORIAL_ZOMBIQUARIUM_BOUGHT_SNORKEL;
+				}
+
 				mBoard->TakeSunMoney(aCost);
 				mApp->PlayFoley(FOLEY_ZOMBIESPLASH);
 				mApp->AddPvzpParticle(aZombie->mPosX + 60.0f, aZombie->mPosY + 20.0f, RENDER_LAYER_TOP, PARTICLE_PLANTING_POOL);
@@ -3645,12 +3672,12 @@ void Challenge::ZombiquariumPacketClicked(SeedPacket* theSeedPacket)
 	}
 }
 
-void Challenge::ZombiquariumDropBrain(int x, int y)
+GridItem* Challenge::ZombiquariumDropBrain(int x, int y)
 {
 	mBoard->ClearAdvice(ADVICE_ZOMBIQUARIUM_CLICK_TO_FEED);
 	GridItem* aBrain = mBoard->mGridItems.DataArrayAlloc();
 	if (aBrain == nullptr)
-		return;
+		return nullptr;
 
 	aBrain->mGridItemType = GRIDITEM_BRAIN;
 	aBrain->mRenderOrder = 400000;
@@ -3660,6 +3687,7 @@ void Challenge::ZombiquariumDropBrain(int x, int y)
 	aBrain->mPosX = x - 15.0f;
 	aBrain->mPosY = y - 15.0f;
 	mApp->PlaySample(Sexy::SOUND_TAP);
+	return aBrain;
 }
 
 void Challenge::ZombiquariumMouseDown(int x, int y)
@@ -3677,9 +3705,10 @@ void Challenge::ZombiquariumMouseDown(int x, int y)
 			aBrainsCount++;
 		}
 	}
-	if (aBrainsCount < 3 && mBoard->TakeSunMoney(5))
+	if (aBrainsCount < 3 && mBoard->CanTakeSunMoney(5))
 	{
-		ZombiquariumDropBrain(x, y);
+		if (ZombiquariumDropBrain(x, y))
+			mBoard->TakeSunMoney(5);
 	}
 }
 
@@ -3792,6 +3821,9 @@ void Challenge::ScaryPotterPlacePot(ScaryPotType theScaryPotType, ZombieType the
 		PvzpWeightedGridArray* aGrid = PvzpPickFromWeightedGridArray(theGridArray, theGridArrayCount);
 
 		GridItem* aScaryPot = mBoard->mGridItems.DataArrayAlloc();
+		if (aScaryPot == nullptr)
+			break;
+
 		aScaryPot->mGridItemType = GRIDITEM_SCARY_POT;
 		aScaryPot->mGridItemState = GRIDITEM_STATE_SCARY_POT_QUESTION;
 		aScaryPot->mGridX = aGrid->mX;
@@ -4521,6 +4553,9 @@ void Challenge::IZombieInitLevel()
 	for (int aRow = 0; aRow < I_ZOMBIE_WINNING_SCORE; aRow++)
 	{
 		GridItem* aBrain = mBoard->mGridItems.DataArrayAlloc();
+		if (aBrain == nullptr)
+			break;
+
 		aBrain->mGridItemType = GRIDITEM_IZOMBIE_BRAIN;
 		aBrain->mGridX = 0;
 		aBrain->mGridY = aRow;
@@ -5444,7 +5479,9 @@ void Challenge::TreeOfWisdomGrow()
 {
 	mApp->mPlayerInfo->mChallengeRecords[mApp->GetCurrentChallengeIndex()]++;
 	int aTreeSize = TreeOfWisdomGetSize();
-	mApp->ReanimationGet(mReanimChallenge)->PlayReanim(StrFormat("anim_grow%d", std::clamp(aTreeSize, 1, 51)).c_str(), REANIM_PLAY_ONCE_AND_HOLD, 0, 8.0f);
+	Reanimation* aTreeReanim = mApp->ReanimationTryToGet(mReanimChallenge);
+	if (aTreeReanim)
+		aTreeReanim->PlayReanim(StrFormat("anim_grow%d", std::clamp(aTreeSize, 1, 51)).c_str(), REANIM_PLAY_ONCE_AND_HOLD, 0, 8.0f);
 	mApp->PlayFoley(FOLEY_PLANTGROW);
 
 	if (aTreeSize > 1)

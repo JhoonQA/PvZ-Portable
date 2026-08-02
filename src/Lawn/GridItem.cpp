@@ -513,7 +513,13 @@ void GridItem::UpdatePortal()
 {
     Reanimation* aPortalReanim = mApp->ReanimationTryToGet(mGridItemReanimID);
     if (aPortalReanim == nullptr)
+    {
+        if (mGridItemState == GridItemState::GRIDITEM_STATE_PORTAL_CLOSED)
+        {
+            mGridItemState = GridItemState::GRIDITEM_STATE_NORMAL;
+        }
         return;
+    }
     if (mGridItemState == GridItemState::GRIDITEM_STATE_PORTAL_CLOSED)
     {
         if (aPortalReanim->mLoopCount > 0)

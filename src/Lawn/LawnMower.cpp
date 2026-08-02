@@ -387,7 +387,10 @@ void LawnMower::Die()
 
         aLawnMower->LawnMowerInitialize(mRow);
         aLawnMower->mMowerState = LawnMowerState::MOWER_ROLLING_IN;
-        mBoard->mBonusLawnMowersRemaining--;
+        if (!aLawnMower->mDead)
+        {
+            mBoard->mBonusLawnMowersRemaining--;
+        }
     }
 }
 

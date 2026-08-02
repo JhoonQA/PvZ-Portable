@@ -1989,6 +1989,8 @@ void Zombie::UpdateZombieDolphinRider()
         }
         else if (aBodyReanim->ShouldTriggerTimedEvent(0.49f))
         {
+            mVelX = 0.0f;
+
             Reanimation* aSplashReanim = mApp->AddReanimation(mX - 63, mY + 73, mRenderOrder + 1, ReanimationType::REANIM_SPLASH);
             if (aSplashReanim == nullptr)
                 return;
@@ -1996,7 +1998,6 @@ void Zombie::UpdateZombieDolphinRider()
             aSplashReanim->OverrideScale(1.2f, 0.8f);
             mApp->AddPvzpParticle(mX - 26, mY + 115, mRenderOrder + 1, ParticleEffect::PARTICLE_PLANTING_POOL);
             mApp->PlayFoley(FoleyType::FOLEY_ZOMBIE_ENTERING_WATER);
-            mVelX = 0.0f;
         }
         else if (aBodyReanim->mLoopCount > 0)
         {
@@ -10326,7 +10327,11 @@ void Zombie::BossHeadSpitContact()
     }
 
     mBossFireBallReanimID = mApp->ReanimationGetID(aFireBallReanim);
-    mApp->ReanimationTryToGet(mSpecialHeadReanimID)->PlayReanim("anim_laugh", ReanimLoopType::REANIM_LOOP, 20, 18.0f);
+    Reanimation* aHeadReanim = mApp->ReanimationTryToGet(mSpecialHeadReanimID);
+    if (aHeadReanim)
+    {
+        aHeadReanim->PlayReanim("anim_laugh", ReanimLoopType::REANIM_LOOP, 20, 18.0f);
+    }
     mApp->PlayFoley(FoleyType::FOLEY_HYDRAULIC_SHORT);
 }
 
@@ -10624,7 +10629,10 @@ void Zombie::UpdateBoss()
         if (aBodyReanim->mLoopCount > 0)
         {
             aHeadReanim = mApp->ReanimationTryToGet(mSpecialHeadReanimID);
-            aHeadReanim->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 20, 18.0f);
+            if (aHeadReanim)
+            {
+                aHeadReanim->PlayReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 20, 18.0f);
+            }
             mZombiePhase = ZombiePhase::PHASE_BOSS_HEAD_IDLE_AFTER_SPIT;
             PlayZombieReanim("anim_head_idle", ReanimLoopType::REANIM_LOOP, 0, 12.0f);
             mPhaseCounter = 300;

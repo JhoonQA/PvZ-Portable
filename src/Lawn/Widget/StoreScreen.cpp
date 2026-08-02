@@ -1134,7 +1134,10 @@ void StoreScreen::AdvanceCrazyDaveDialog()
         mApp->PlaySample(Sexy::SOUND_DIAMOND);
         Coin* aCoin = mCoins.DataArrayAlloc();
         if (aCoin == nullptr)
+        {
+            mApp->mPlayerInfo->AddCoins(Coin::GetCoinValue(COIN_DIAMOND));
             return;
+        }
 
         aCoin->CoinInitialize(80, 520, COIN_DIAMOND, COIN_MOTION_FROM_PRESENT);
         aCoin->mVelX = 0;

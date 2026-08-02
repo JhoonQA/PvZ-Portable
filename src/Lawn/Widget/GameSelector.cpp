@@ -294,48 +294,70 @@ GameSelector::GameSelector(LawnApp* theApp)
 	mShowStartButton = false;
 
 	Reanimation* aSelectorReanim = mApp->AddReanimation(0.5f, 0.5f, 0, ReanimationType::REANIM_SELECTOR_SCREEN);
-	aSelectorReanim->PlayReanim("anim_open", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 30.0f);
-	aSelectorReanim->AssignRenderGroupToPrefix("flower", RENDER_GROUP_HIDDEN);
-	aSelectorReanim->AssignRenderGroupToPrefix("leaf", RENDER_GROUP_HIDDEN);
-	aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_BG", 1);
-	mSelectorReanimID = mApp->ReanimationGetID(aSelectorReanim);
+	mSelectorReanimID = ReanimationID::REANIMATIONID_NULL;
+	if (aSelectorReanim)
+	{
+		aSelectorReanim->PlayReanim("anim_open", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 30.0f);
+		aSelectorReanim->AssignRenderGroupToPrefix("flower", RENDER_GROUP_HIDDEN);
+		aSelectorReanim->AssignRenderGroupToPrefix("leaf", RENDER_GROUP_HIDDEN);
+		aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_BG", 1);
+		mSelectorReanimID = mApp->ReanimationGetID(aSelectorReanim);
+		int aFrameStart, aFrameCount;
+		aSelectorReanim->GetFramesForLayer("anim_sign", aFrameStart, aFrameCount);
+		aSelectorReanim->mFrameBasePose = aFrameStart + aFrameCount - 1;
+	}
 	mSelectorState = SelectorAnimState::SELECTOR_OPEN;
-	int aFrameStart, aFrameCount;
-	aSelectorReanim->GetFramesForLayer("anim_sign", aFrameStart, aFrameCount);
-	aSelectorReanim->mFrameBasePose = aFrameStart + aFrameCount - 1;
 
 	for (int i = 0; i < 6; i++)
 	{
 		Reanimation* aCloudReanim = mApp->AddReanimation(0.5f, 0.5f, 0, ReanimationType::REANIM_SELECTOR_SCREEN);
-		std::string aAnimName = Sexy::StrFormat("anim_cloud%d", (i > 1 ? i + 2 : i + 1));
-		aCloudReanim->PlayReanim(aAnimName.c_str(), ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 0.0f);
-		mCloudReanimID[i] = mApp->ReanimationGetID(aCloudReanim);
+		mCloudReanimID[i] = ReanimationID::REANIMATIONID_NULL;
+		if (aCloudReanim)
+		{
+			std::string aAnimName = Sexy::StrFormat("anim_cloud%d", (i > 1 ? i + 2 : i + 1));
+			aCloudReanim->PlayReanim(aAnimName.c_str(), ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 0.0f);
+			mCloudReanimID[i] = mApp->ReanimationGetID(aCloudReanim);
+		}
 		mCloudCounter[i] = RandRangeInt(-6000, 2000);
 		if (mCloudCounter[i] < 0)
 		{
-			aCloudReanim->mAnimTime = -mCloudCounter[i] / 6000.0f;
-			aCloudReanim->mAnimRate = 0.5f;
+			if (aCloudReanim)
+			{
+				aCloudReanim->mAnimTime = -mCloudCounter[i] / 6000.0f;
+				aCloudReanim->mAnimRate = 0.5f;
+			}
 			mCloudCounter[i] = 0;
 		}
-		else
+		else if (aCloudReanim)
 			aCloudReanim->mAnimRate = 0.0f;
 	}
 
 	for (int i = 0; i < 3; i++)
 	{
 		Reanimation* aFlowerReanim = mApp->AddReanimation(0.5f, 0.5f, 0, ReanimationType::REANIM_SELECTOR_SCREEN);
-		std::string aAnimName = Sexy::StrFormat("anim_flower%d", i + 1);
-		aFlowerReanim->PlayReanim(aAnimName.c_str(), ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 0.0f);
-		aFlowerReanim->mAnimRate = 0.0f;
-		aFlowerReanim->AttachToAnotherReanimation(aSelectorReanim, "SelectorScreen_BG_Right");
-		aFlowerReanim->mIsAttachment = false;
-		mFlowerReanimID[i] = mApp->ReanimationGetID(aFlowerReanim);
+		mFlowerReanimID[i] = ReanimationID::REANIMATIONID_NULL;
+		if (aFlowerReanim)
+		{
+			std::string aAnimName = Sexy::StrFormat("anim_flower%d", i + 1);
+			aFlowerReanim->PlayReanim(aAnimName.c_str(), ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 0.0f);
+			aFlowerReanim->mAnimRate = 0.0f;
+			if (aSelectorReanim)
+			{
+				aFlowerReanim->AttachToAnotherReanimation(aSelectorReanim, "SelectorScreen_BG_Right");
+				aFlowerReanim->mIsAttachment = false;
+			}
+			mFlowerReanimID[i] = mApp->ReanimationGetID(aFlowerReanim);
+		}
 	}
 
 	Reanimation* aLeafReanim = mApp->AddReanimation(0.5f, 0.5f, 0, ReanimationType::REANIM_SELECTOR_SCREEN);
-	aLeafReanim->PlayReanim("anim_grass", ReanimLoopType::REANIM_LOOP, 0, 6.0f);
-	aLeafReanim->mAnimRate = 0.0f;
-	mLeafReanimID = mApp->ReanimationGetID(aLeafReanim);
+	mLeafReanimID = ReanimationID::REANIMATIONID_NULL;
+	if (aLeafReanim)
+	{
+		aLeafReanim->PlayReanim("anim_grass", ReanimLoopType::REANIM_LOOP, 0, 6.0f);
+		aLeafReanim->mAnimRate = 0.0f;
+		mLeafReanimID = mApp->ReanimationGetID(aLeafReanim);
+	}
 	mLeafCounter = 50;
 
 	SyncProfile(false);
@@ -396,22 +418,25 @@ void GameSelector::SyncButtons()
 	mZombatarButton->mDisabled = false; // @Patoke: added these
 	mZombatarButton->mVisible = true;
 
-	Reanimation* aSelectorReanim = mApp->ReanimationGet(mSelectorReanimID);
-	if (aAlmanacAvailable)
+	Reanimation* aSelectorReanim = mApp->ReanimationTryToGet(mSelectorReanimID);
+	if (aSelectorReanim)
 	{
-		aSelectorReanim->AssignRenderGroupToPrefix("almanac_key_shadow", RENDER_GROUP_NORMAL);
-		if (aStoreOpen)
-			aSelectorReanim->SetImageOverride("almanac_key_shadow", nullptr);
+		if (aAlmanacAvailable)
+		{
+			aSelectorReanim->AssignRenderGroupToPrefix("almanac_key_shadow", RENDER_GROUP_NORMAL);
+			if (aStoreOpen)
+				aSelectorReanim->SetImageOverride("almanac_key_shadow", nullptr);
+			else
+				aSelectorReanim->SetImageOverride("almanac_key_shadow", Sexy::IMAGE_REANIM_SELECTORSCREEN_ALMANAC_SHADOW);
+		}
+		else if (aStoreOpen)
+		{
+			aSelectorReanim->AssignRenderGroupToPrefix("almanac_key_shadow", RENDER_GROUP_NORMAL);
+			aSelectorReanim->SetImageOverride("almanac_key_shadow", Sexy::IMAGE_REANIM_SELECTORSCREEN_KEY_SHADOW);
+		}
 		else
-			aSelectorReanim->SetImageOverride("almanac_key_shadow", Sexy::IMAGE_REANIM_SELECTORSCREEN_ALMANAC_SHADOW);
+			aSelectorReanim->AssignRenderGroupToPrefix("almanac_key_shadow", RENDER_GROUP_HIDDEN);
 	}
-	else if (aStoreOpen)
-	{
-		aSelectorReanim->AssignRenderGroupToPrefix("almanac_key_shadow", RENDER_GROUP_NORMAL);
-		aSelectorReanim->SetImageOverride("almanac_key_shadow", Sexy::IMAGE_REANIM_SELECTORSCREEN_KEY_SHADOW);
-	}
-	else
-		aSelectorReanim->AssignRenderGroupToPrefix("almanac_key_shadow", RENDER_GROUP_HIDDEN);
 
 	mZenGardenButton->mDisabled = !aZenGardenOpen;
 	mZenGardenButton->mVisible = aZenGardenOpen;
@@ -562,10 +587,16 @@ void GameSelector::Draw(Graphics* g)
 		return;
 
 	g->SetLinearBlend(true);
-	Reanimation* aSelectorReanim = mApp->ReanimationGet(mSelectorReanimID);
+	Reanimation* aSelectorReanim = mApp->ReanimationTryToGet(mSelectorReanimID);
+	if (aSelectorReanim == nullptr)
+		return;
 	aSelectorReanim->DrawRenderGroup(g, 1);  // "SelectorScreen_BG"
 	for (int i = 0; i < 6; i++)
-		mApp->ReanimationGet(mCloudReanimID[i])->Draw(g);
+	{
+		Reanimation* aCloudReanim = mApp->ReanimationTryToGet(mCloudReanimID[i]);
+		if (aCloudReanim)
+			aCloudReanim->Draw(g);
+	}
 	aSelectorReanim->DrawRenderGroup(g, RENDER_GROUP_NORMAL);
 
 	if (mSelectorState == SelectorAnimState::SELECTOR_OPEN)
@@ -630,7 +661,9 @@ void GameSelector::DrawOverlay(Graphics* g)
 			aOffsetY = 0;
 		}
 
-		Reanimation* aSelectorReanim = mApp->ReanimationGet(mSelectorReanimID);
+		Reanimation* aSelectorReanim = mApp->ReanimationTryToGet(mSelectorReanimID);
+		if (aSelectorReanim)
+		{
 		int aRightIdx = aSelectorReanim->FindTrackIndex("SelectorScreen_BG_Right");
 		ReanimatorTransform aTransform;
 		aSelectorReanim->GetCurrentTransform(aRightIdx, &aTransform);
@@ -676,6 +709,7 @@ void GameSelector::DrawOverlay(Graphics* g)
 			PvzpDrawImageCelF(g, Sexy::IMAGE_SELECTORSCREEN_LEVELNUMBERS, aTransSubX + 518.f, aTransSubY + 51.f, 0, 0);
 		}
 		g->SetColorizeImages(false);
+		}
 	}
 
 	if (mZenGardenButton->mVisible && mApp->mZenGarden->PlantsNeedWater())
@@ -691,12 +725,20 @@ void GameSelector::DrawOverlay(Graphics* g)
 		aHandReanim->Draw(g);
 		g->ClearClipRect();
 	}
-	mApp->ReanimationGet(mLeafReanimID)->Draw(g);
+	Reanimation* aLeafReanim = mApp->ReanimationTryToGet(mLeafReanimID);
+	if (aLeafReanim)
+		aLeafReanim->Draw(g);
 	for (int i = 0; i < 3; i++)
-		mApp->ReanimationGet(mFlowerReanimID[i])->Draw(g);
+	{
+		Reanimation* aFlowerReanim = mApp->ReanimationTryToGet(mFlowerReanimID[i]);
+		if (aFlowerReanim)
+			aFlowerReanim->Draw(g);
+	}
 
 	// @Minerscale: Trophy needs to draw in the DrawOverlay
-	Reanimation* aSelectorReanim = mApp->ReanimationGet(mSelectorReanimID);
+	Reanimation* aSelectorReanim = mApp->ReanimationTryToGet(mSelectorReanimID);
+	if (aSelectorReanim)
+	{
 
 	int aLeftIdx = aSelectorReanim->FindTrackIndex("SelectorScreen_BG_Left");
 	ReanimatorTransform aTransformLeft;
@@ -712,6 +754,7 @@ void GameSelector::DrawOverlay(Graphics* g)
 		PvzpParticleSystem* aTrophyParticle = mApp->ParticleTryToGet(mTrophyParticleID);
 		if (aTrophyParticle)
 			aTrophyParticle->Draw(g);
+	}
 	}
 
 	mToolTip->Draw(g);
@@ -817,19 +860,22 @@ void GameSelector::Update()
 			mApp->PlaySample(Sexy::SOUND_EVILLAUGH);
 	}
 
-	Reanimation* aSelectorReanim = mApp->ReanimationGet(mSelectorReanimID);
+	Reanimation* aSelectorReanim = mApp->ReanimationTryToGet(mSelectorReanimID);
 	switch (mSelectorState)
 	{
 	case SelectorAnimState::SELECTOR_OPEN:
 		if (mWidgetManager)
 			mWidgetManager->RehupMouse();
-		if (aSelectorReanim->mLoopCount > 0)
+		if (aSelectorReanim == nullptr || aSelectorReanim->mLoopCount > 0)
 		{
-			aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_Adventure_button", RENDER_GROUP_HIDDEN);
-			aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_StartAdventure_button", RENDER_GROUP_HIDDEN);
-			aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_Survival_button", RENDER_GROUP_HIDDEN);
-			aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_Challenges_button", RENDER_GROUP_HIDDEN);
-			aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_ZenGarden_button", RENDER_GROUP_HIDDEN);
+			if (aSelectorReanim)
+			{
+				aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_Adventure_button", RENDER_GROUP_HIDDEN);
+				aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_StartAdventure_button", RENDER_GROUP_HIDDEN);
+				aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_Survival_button", RENDER_GROUP_HIDDEN);
+				aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_Challenges_button", RENDER_GROUP_HIDDEN);
+				aSelectorReanim->AssignRenderGroupToTrack("SelectorScreen_ZenGarden_button", RENDER_GROUP_HIDDEN);
+			}
 			mAdventureButton->mBtnNoDraw = false;
 			mMinigameButton->mBtnNoDraw = false;
 			mPuzzleButton->mBtnNoDraw = false;
@@ -864,7 +910,8 @@ void GameSelector::Update()
 			}
 			else
 			{
-				aSelectorReanim->PlayReanim("anim_sign", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 30.0f);
+				if (aSelectorReanim)
+					aSelectorReanim->PlayReanim("anim_sign", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 30.0f);
 				mSelectorState = SelectorAnimState::SELECTOR_IDLE;
 			}
 
@@ -889,12 +936,13 @@ void GameSelector::Update()
 	case SelectorAnimState::SELECTOR_NEW_USER:
 		if (mApp->GetDialog(Dialogs::DIALOG_CREATEUSER) == nullptr)
 		{
-			aSelectorReanim->PlayReanim("anim_sign", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 30.0f);
+			if (aSelectorReanim)
+				aSelectorReanim->PlayReanim("anim_sign", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 0, 30.0f);
 			mSelectorState = SelectorAnimState::SELECTOR_SHOW_SIGN;
 		}
 		break;
 	case SelectorAnimState::SELECTOR_SHOW_SIGN:
-		if (aSelectorReanim->mLoopCount > 0)
+		if (aSelectorReanim == nullptr || aSelectorReanim->mLoopCount > 0)
 			mSelectorState = SelectorAnimState::SELECTOR_IDLE;
 		break;
 	case SelectorAnimState::SELECTOR_IDLE:
@@ -903,36 +951,49 @@ void GameSelector::Update()
 
 	for (int i = 0; i < 6; i++)
 	{
-		Reanimation* aCloudReanim = mApp->ReanimationGet(mCloudReanimID[i]);
+		Reanimation* aCloudReanim = mApp->ReanimationTryToGet(mCloudReanimID[i]);
 		if (mCloudCounter[i] > 0)
 		{
-			if (--mCloudCounter[i] == 0)
+			if (--mCloudCounter[i] == 0 && aCloudReanim)
 			{
 				aCloudReanim->mLoopCount = 0;
 				aCloudReanim->mAnimTime = 0.0f;
 				aCloudReanim->mAnimRate = 0.5f;
 			}
 		}
-		else if (aCloudReanim->mLoopCount > 0)
+		else if (aCloudReanim && aCloudReanim->mLoopCount > 0)
 			mCloudCounter[i] = RandRangeInt(2000, 4000);
 	}
-	aSelectorReanim->Update();
+	if (aSelectorReanim)
+		aSelectorReanim->Update();
 
-	Reanimation* aLeafReanim = mApp->ReanimationGet(mLeafReanimID);
-	aLeafReanim->Update();
-	int aLeafTrackIndex = aSelectorReanim->FindTrackIndex("SelectorScreen_BG_Right");
-	ReanimatorTransform aLeafTransform;
-	aSelectorReanim->GetCurrentTransform(aLeafTrackIndex, &aLeafTransform);
-	aLeafReanim->SetPosition(aLeafTransform.mTransX - 71.0f, aLeafTransform.mTransY - 41.0f);
+	Reanimation* aLeafReanim = mApp->ReanimationTryToGet(mLeafReanimID);
+	if (aLeafReanim)
+		aLeafReanim->Update();
+	if (aSelectorReanim)
+	{
+		int aLeafTrackIndex = aSelectorReanim->FindTrackIndex("SelectorScreen_BG_Right");
+		ReanimatorTransform aLeafTransform;
+		aSelectorReanim->GetCurrentTransform(aLeafTrackIndex, &aLeafTransform);
+		if (aLeafReanim)
+			aLeafReanim->SetPosition(aLeafTransform.mTransX - 71.0f, aLeafTransform.mTransY - 41.0f);
+	}
 	if (--mLeafCounter == 0)
 	{
-		float aRate = RandRangeFloat(3.0f, 12.0f);
-		aLeafReanim->PlayReanim("anim_grass", ReanimLoopType::REANIM_LOOP, 20, aRate);
+		if (aLeafReanim)
+		{
+			float aRate = RandRangeFloat(3.0f, 12.0f);
+			aLeafReanim->PlayReanim("anim_grass", ReanimLoopType::REANIM_LOOP, 20, aRate);
+		}
 		mLeafCounter = RandRangeInt(200, 400);
 	}
 
 	for (int i = 0; i < 6; i++)
-		mApp->ReanimationGet(mCloudReanimID[i])->Update();
+	{
+		Reanimation* aCloudReanim = mApp->ReanimationTryToGet(mCloudReanimID[i]);
+		if (aCloudReanim)
+			aCloudReanim->Update();
+	}
 	Reanimation* aHandReanim = mApp->ReanimationTryToGet(mHandReanimID);
 	if (aHandReanim)
 		aHandReanim->Update();
@@ -950,14 +1011,19 @@ void GameSelector::Update()
 	TrackButton(mChangeUserButton, "woodsign2", 24.0f, 10.0f);
 	TrackButton(mZombatarButton, "woodsign3", 0.f, 0.f); // @Patoke: add shart here
 	TrackButton(mAchievementsButton, "SelectorScreen_BG_Left", 20.f, 480.f);
-	aSelectorReanim->SetImageOverride("woodsign2", (mChangeUserButton->mIsOver || mChangeUserButton->mIsDown) ? Sexy::IMAGE_REANIM_SELECTORSCREEN_WOODSIGN2_PRESS : nullptr);
-	aSelectorReanim->SetImageOverride("woodsign3", (mZombatarButton->mIsOver || mZombatarButton->mIsDown) ? Sexy::IMAGE_REANIM_SELECTORSCREEN_WOODSIGN3_PRESS : nullptr);
+	if (aSelectorReanim)
+	{
+		aSelectorReanim->SetImageOverride("woodsign2", (mChangeUserButton->mIsOver || mChangeUserButton->mIsDown) ? Sexy::IMAGE_REANIM_SELECTORSCREEN_WOODSIGN2_PRESS : nullptr);
+		aSelectorReanim->SetImageOverride("woodsign3", (mZombatarButton->mIsOver || mZombatarButton->mIsDown) ? Sexy::IMAGE_REANIM_SELECTORSCREEN_WOODSIGN3_PRESS : nullptr);
+	}
 }
 
 // GOTY @Patoke: 0x44EA40
 void GameSelector::TrackButton(DialogButton* theButton, const char* theTrackName, float theOffsetX, float theOffsetY)
 {
-	Reanimation* aSelectorReanim = mApp->ReanimationGet(mSelectorReanimID);
+	Reanimation* aSelectorReanim = mApp->ReanimationTryToGet(mSelectorReanimID);
+	if (aSelectorReanim == nullptr)
+		return;
 	int aTrackIndex = aSelectorReanim->FindTrackIndex(theTrackName);
 	ReanimatorTransform aTransform;
 	aSelectorReanim->GetCurrentTransform(aTrackIndex, &aTransform);
@@ -1117,8 +1183,8 @@ void GameSelector::MouseDown(int x, int y, int theClickCount)
 	(void)theClickCount;
 	for (int i = 0; i < 3; i++)
 	{
-		Reanimation* aFlowerReanim = mApp->ReanimationGet(mFlowerReanimID[i]);
-		if (aFlowerReanim->mAnimRate <= 0.0f && Distance2D(x, y, gFlowerCenter[i][0], gFlowerCenter[i][1]) < 20.0f)
+		Reanimation* aFlowerReanim = mApp->ReanimationTryToGet(mFlowerReanimID[i]);
+		if (aFlowerReanim && aFlowerReanim->mAnimRate <= 0.0f && Distance2D(x, y, gFlowerCenter[i][0], gFlowerCenter[i][1]) < 20.0f)
 		{
 			aFlowerReanim->mAnimRate = 24.0f;
 			mApp->PlayFoley(FoleyType::FOLEY_LIMBS_POP);
