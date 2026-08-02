@@ -3575,13 +3575,22 @@ void Challenge::BeghouledPacketClicked(SeedPacket* theSeedPacket)
 	}
 	else if (aUpgrade != -1 && !mBeghouledPurcasedUpgrade[aUpgrade])
 	{
-		if (mApp->mEffectSystem->mReanimationHolder->mReanimations.mSize >= mApp->mEffectSystem->mReanimationHolder->mReanimations.mMaxSize)
+		const SeedType gUpgradableSeedTypes[3] = { SEED_PEASHOOTER, SEED_PUFFSHROOM, SEED_WALLNUT };
+		SeedType aSeedPrimary = gUpgradableSeedTypes[aUpgrade];
+
+		int aMatchCount = 0;
+		for (Plant* aPlant : mBoard->mPlants)
+		{
+			if (!aPlant->mDead && aPlant->mSeedType == aSeedPrimary)
+			{
+				aMatchCount++;
+			}
+		}
+		if (mApp->mEffectSystem->mReanimationHolder->mReanimations.mMaxSize - mApp->mEffectSystem->mReanimationHolder->mReanimations.mSize < aMatchCount)
 			return;
 
 		mBeghouledPurcasedUpgrade[aUpgrade] = true;
-		const SeedType gUpgradableSeedTypes[3] = { SEED_PEASHOOTER, SEED_PUFFSHROOM, SEED_WALLNUT };
-		SeedType aSeedPrimary = gUpgradableSeedTypes[aUpgrade];
-	
+
 		for (Plant* aPlant : mBoard->mPlants)
 		{
 			if (aPlant->mDead)
@@ -3705,10 +3714,18 @@ void Challenge::ZombiquariumMouseDown(int x, int y)
 			aBrainsCount++;
 		}
 	}
-	if (aBrainsCount < 3 && mBoard->CanTakeSunMoney(5))
+	if (aBrainsCount < 3)
 	{
-		if (ZombiquariumDropBrain(x, y))
-			mBoard->TakeSunMoney(5);
+		if (mBoard->CanTakeSunMoney(5))
+		{
+			if (ZombiquariumDropBrain(x, y))
+				mBoard->TakeSunMoney(5);
+		}
+		else
+		{
+			mApp->PlaySample(Sexy::SOUND_BUZZER);
+			mBoard->mOutOfMoneyCounter = 70;
+		}
 	}
 }
 
@@ -4428,6 +4445,11 @@ void Challenge::IZombieMouseDownWithZombie(int theX, int theY, int theClickCount
 						mApp->PlayFoley(FOLEY_PLANT);
 						mBoard->ClearCursor();
 					}
+				}
+				else
+				{
+					mApp->PlaySample(Sexy::SOUND_BUZZER);
+					mBoard->mOutOfMoneyCounter = 70;
 				}
 			}
 			else

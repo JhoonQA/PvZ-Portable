@@ -1719,6 +1719,9 @@ void Board::InitLawnMowers()
 			(!mApp->IsScaryPotterLevel() && mPlantRow[aRow] != PlantRowType::PLANTROW_DIRT))  // 除冒险模式 4-5 关卡外的破罐者模式关卡无小推车
 		{
 			LawnMower* aLawnMower = mLawnMowers.DataArrayAlloc();
+			if (aLawnMower == nullptr)
+				break;
+
 			aLawnMower->LawnMowerInitialize(aRow);
 			aLawnMower->mVisible = false;
 		}
@@ -4193,7 +4196,7 @@ void Board::TutorialArrowShow(int theX, int theY)
 {
 	TutorialArrowRemove();
 	PvzpParticleSystem* aParticle = mApp->AddPvzpParticle(theX, theY, MakeRenderOrder(RenderLayer::RENDER_LAYER_TOP, 0, 0), ParticleEffect::PARTICLE_SEED_PACKET_PICK);
-	mTutorialParticleID = mApp->ParticleGetID(aParticle);
+	mTutorialParticleID = aParticle ? mApp->ParticleGetID(aParticle) : ParticleSystemID::PARTICLESYSTEMID_NULL;
 }
 
 void Board::TutorialArrowRemove()
@@ -6023,7 +6026,7 @@ void Board::Update()
 	{
 		int aRenderPosition = MakeRenderOrder(RenderLayer::RENDER_LAYER_GROUND, 2, 0);
 		PvzpParticleSystem* aPoolParticle = mApp->AddPvzpParticle(450, 295, aRenderPosition, ParticleEffect::PARTICLE_POOL_SPARKLY);
-		mPoolSparklyParticleID = mApp->ParticleGetID(aPoolParticle);
+		mPoolSparklyParticleID = aPoolParticle ? mApp->ParticleGetID(aPoolParticle) : ParticleSystemID::PARTICLESYSTEMID_NULL;
 	}
 
 	UpdateGridItems();

@@ -1223,7 +1223,10 @@ void Projectile::ConvertToFireball(int theGridX)
 	aFirePeaReanim->SetPosition(mPosX + aOffsetX, mPosY + aOffsetY);
 	aFirePeaReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
 	aFirePeaReanim->mAnimRate = RandRangeFloat(50.0f, 80.0f);
-	AttachReanim(mAttachmentID, aFirePeaReanim, aOffsetX, aOffsetY);
+	if (AttachReanim(mAttachmentID, aFirePeaReanim, aOffsetX, aOffsetY) == nullptr)
+	{
+		aFirePeaReanim->ReanimationDie();
+	}
 }
 
 void Projectile::ConvertToPea(int theGridX)

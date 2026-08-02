@@ -81,7 +81,10 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
             aSunReanim->SetPosition(mPosX + aPosX, mPosY + aPosY);
             aSunReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
             aSunReanim->mAnimRate = 6.0f;
-            AttachReanim(mAttachmentID, aSunReanim, aPosX, aPosY);
+            if (AttachReanim(mAttachmentID, aSunReanim, aPosX, aPosY) == nullptr)
+            {
+                aSunReanim->ReanimationDie();
+            }
         }
     }
     else if (mType == CoinType::COIN_SILVER)
@@ -98,7 +101,10 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
             aCoinReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
             aCoinReanim->mAnimTime = RandRangeFloat(0.0f, 0.99f);
             aCoinReanim->mAnimRate *= RandRangeFloat(0.6f, 1.0f);
-            AttachReanim(mAttachmentID, aCoinReanim, aPosX, aPosY);
+            if (AttachReanim(mAttachmentID, aCoinReanim, aPosX, aPosY) == nullptr)
+            {
+                aCoinReanim->ReanimationDie();
+            }
         }
     }
     else if (mType == CoinType::COIN_GOLD)
@@ -115,7 +121,10 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
             aCoinReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
             aCoinReanim->mAnimTime = RandRangeFloat(0.0f, 0.99f);
             aCoinReanim->mAnimRate *= RandRangeFloat(0.6f, 1.0f);
-            AttachReanim(mAttachmentID, aCoinReanim, aPosX, aPosY);
+            if (AttachReanim(mAttachmentID, aCoinReanim, aPosX, aPosY) == nullptr)
+            {
+                aCoinReanim->ReanimationDie();
+            }
         }
     }
     else if (mType == CoinType::COIN_DIAMOND)
@@ -132,7 +141,10 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
             aCoinReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
             aCoinReanim->mAnimTime = RandRangeFloat(0.0f, 0.99f);
             aCoinReanim->mAnimRate = RandRangeFloat(50.0f, 80.0f);
-            AttachReanim(mAttachmentID, aCoinReanim, aPosX, aPosY);
+            if (AttachReanim(mAttachmentID, aCoinReanim, aPosX, aPosY) == nullptr)
+            {
+                aCoinReanim->ReanimationDie();
+            }
         }
     }
 

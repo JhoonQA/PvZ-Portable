@@ -509,7 +509,7 @@ void GameSelector::AddTrophySparkle()
 {
 	PVZP_ASSERT(mTrophyParticleID == PARTICLESYSTEMID_NULL);
 	PvzpParticleSystem* aTrophyParticle = mApp->AddPvzpParticle(85.0f, 330.0f, RenderLayer::RENDER_LAYER_TOP, ParticleEffect::PARTICLE_TROPHY_SPARKLE);
-	mTrophyParticleID = mApp->ParticleGetID(aTrophyParticle);
+	mTrophyParticleID = aTrophyParticle ? mApp->ParticleGetID(aTrophyParticle) : ParticleSystemID::PARTICLESYSTEMID_NULL;
 }
 
 // GOTY @Patoke: 0x44D270

@@ -1232,7 +1232,14 @@ void Plant::UpdatePotato()
                 aLightReanim->ShowOnlyTrack("anim_glow");
                 aLightReanim->SetTruncateDisappearingFrames("anim_glow", false);
                 mLightReanimID = mApp->ReanimationGetID(aLightReanim);
-                aLightReanim->AttachToAnotherReanimation(aBodyReanim, "anim_light");
+                if (aBodyReanim->mFrameBasePose == -1)
+                    aBodyReanim->mFrameBasePose = aBodyReanim->mFrameStart;
+                AttachEffect* aAttachEffect = AttachReanim(aBodyReanim->GetTrackInstanceByName("anim_light")->mAttachmentID, aLightReanim, 0.0f, 0.0f);
+                if (aAttachEffect == nullptr)
+                {
+                    aLightReanim->ReanimationDie();
+                    mLightReanimID = ReanimationID::REANIMATIONID_NULL;
+                }
             }
 
             mState = PlantState::STATE_POTATO_ARMED;
@@ -3067,21 +3074,26 @@ Reanimation* Plant::AttachBlinkAnim(Reanimation* theReanimBody)
     aBlinkReanim->mAnimRate = 15.0f;
     aBlinkReanim->mColorOverride = theReanimBody->mColorOverride;
 
+    const char* aAttachTrackName = nullptr;
     if (aTrackToAttach && aAnimToAttach->TrackExists(aTrackToAttach))
-    {
-        aBlinkReanim->AttachToAnotherReanimation(aAnimToAttach, aTrackToAttach);
-    }
+        aAttachTrackName = aTrackToAttach;
     else if (aAnimToAttach->TrackExists("anim_face"))
-    {
-        aBlinkReanim->AttachToAnotherReanimation(aAnimToAttach, "anim_face");
-    }
+        aAttachTrackName = "anim_face";
     else if (aAnimToAttach->TrackExists("anim_idle"))
-    {
-        aBlinkReanim->AttachToAnotherReanimation(aAnimToAttach, "anim_idle");
-    }
+        aAttachTrackName = "anim_idle";
     else
-    {
         PvzpTrace("Missing anim_idle for blink");
+
+    if (aAttachTrackName)
+    {
+        if (aAnimToAttach->mFrameBasePose == -1)
+            aAnimToAttach->mFrameBasePose = aAnimToAttach->mFrameStart;
+        AttachEffect* aAttachEffect = AttachReanim(aAnimToAttach->GetTrackInstanceByName(aAttachTrackName)->mAttachmentID, aBlinkReanim, 0.0f, 0.0f);
+        if (aAttachEffect == nullptr)
+        {
+            aBlinkReanim->ReanimationDie();
+            return nullptr;
+        }
     }
 
     aBlinkReanim->mFilterEffect = theReanimBody->mFilterEffect;
