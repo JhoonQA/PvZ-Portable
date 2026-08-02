@@ -4041,11 +4041,14 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 	}
 	else if (mCursorObject->mCursorType == CursorType::CURSOR_TYPE_PLANT_FROM_USABLE_COIN)
 	{
-		AddPlant(aGridX, aGridY, mCursorObject->mType, mCursorObject->mImitaterType);
+		Plant* aPlant = AddPlant(aGridX, aGridY, mCursorObject->mType, mCursorObject->mImitaterType);
 		Coin* aCoin = mCoins.DataArrayTryToGet(mCursorObject->mCoinID);
-		mCursorObject->mCoinID = CoinID::COINID_NULL;
-		if (aCoin != nullptr)
-			aCoin->Die();
+		if (aPlant)
+		{
+			mCursorObject->mCoinID = CoinID::COINID_NULL;
+			if (aCoin != nullptr)
+				aCoin->Die();
+		}
 	}
 	else if (mCursorObject->mCursorType == CursorType::CURSOR_TYPE_PLANT_FROM_BANK)
 	{
@@ -6204,16 +6207,19 @@ void Board::AddBossRenderItem(RenderItem* theRenderList, int& theCurRenderItem, 
 	aItem->mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_BOSS, aBackLegRow, 2);
 	aItem->mBossPart = BossPart::BOSS_PART_BACK_LEG;
 	theCurRenderItem++;
+	if (RenderListFull(theCurRenderItem)) return;
 	aItem = &theRenderList[theCurRenderItem];
 	aItem->mRenderObjectType = RenderObjectType::RENDER_ITEM_BOSS_PART;
 	aItem->mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_BOSS, aFrontLegRow, 2);
 	aItem->mBossPart = BossPart::BOSS_PART_FRONT_LEG;
 	theCurRenderItem++;
+	if (RenderListFull(theCurRenderItem)) return;
 	aItem = &theRenderList[theCurRenderItem];
 	aItem->mRenderObjectType = RenderObjectType::RENDER_ITEM_BOSS_PART;
 	aItem->mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_BOSS, 4, 2);
 	aItem->mBossPart = BossPart::BOSS_PART_MAIN;
 	theCurRenderItem++;
+	if (RenderListFull(theCurRenderItem)) return;
 	aItem = &theRenderList[theCurRenderItem];
 	aItem->mRenderObjectType = RenderObjectType::RENDER_ITEM_BOSS_PART;
 	aItem->mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_BOSS, aBackArmRow, 3);
@@ -6223,6 +6229,7 @@ void Board::AddBossRenderItem(RenderItem* theRenderList, int& theCurRenderItem, 
 	Reanimation* aBallReanim = mApp->ReanimationTryToGet(theBossZombie->mBossFireBallReanimID);
 	if (aBallReanim)
 	{
+		if (RenderListFull(theCurRenderItem)) return;
 		RenderItem* aItem = &theRenderList[theCurRenderItem];
 		aItem->mRenderObjectType = RenderObjectType::RENDER_ITEM_BOSS_PART;
 		aItem->mZPos = aBallReanim->mRenderOrder;

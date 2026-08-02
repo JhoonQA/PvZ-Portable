@@ -3629,9 +3629,10 @@ void Challenge::ZombiquariumPacketClicked(SeedPacket* theSeedPacket)
 			}
 
 			Zombie* aZombie = ZombiquariumSpawnSnorkle();
-			mApp->PlayFoley(FOLEY_ZOMBIESPLASH);
 			if (aZombie)
 			{
+				mBoard->TakeSunMoney(aCost);
+				mApp->PlayFoley(FOLEY_ZOMBIESPLASH);
 				mApp->AddPvzpParticle(aZombie->mPosX + 60.0f, aZombie->mPosY + 20.0f, RENDER_LAYER_TOP, PARTICLE_PLANTING_POOL);
 			}
 		}
@@ -3639,9 +3640,8 @@ void Challenge::ZombiquariumPacketClicked(SeedPacket* theSeedPacket)
 		{
 			SpawnLevelAward(2, 0);
 			mBoard->ClearAdvice(ADVICE_NONE);
+			mBoard->TakeSunMoney(aCost);
 		}
-
-		mBoard->TakeSunMoney(aCost);
 	}
 }
 

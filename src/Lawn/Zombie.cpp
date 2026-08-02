@@ -598,15 +598,18 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
         LoadPlainZombieReanim();
 
         Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
-        Reanimation* aFlagReanim = mApp->AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_FLAG);
-        if (aBodyReanim && aFlagReanim)
+        if (aBodyReanim)
         {
-            aFlagReanim->PlayReanim("Zombie_flag", ReanimLoopType::REANIM_LOOP, 0, 15.0f);
-            mSpecialHeadReanimID = mApp->ReanimationGetID(aFlagReanim);
-            ReanimatorTrackInstance* aTrackInstance = aBodyReanim->GetTrackInstanceByName("Zombie_flaghand");
-            AttachReanim(aTrackInstance->mAttachmentID, aFlagReanim, 0.0f, 0.0f);
-            aBodyReanim->mFrameBasePose = 0;
-            SetupZombatarFlagReanim(aZombatarRecordIndex);
+            Reanimation* aFlagReanim = mApp->AddReanimation(0.0f, 0.0f, 0, ReanimationType::REANIM_FLAG);
+            if (aFlagReanim)
+            {
+                aFlagReanim->PlayReanim("Zombie_flag", ReanimLoopType::REANIM_LOOP, 0, 15.0f);
+                mSpecialHeadReanimID = mApp->ReanimationGetID(aFlagReanim);
+                ReanimatorTrackInstance* aTrackInstance = aBodyReanim->GetTrackInstanceByName("Zombie_flaghand");
+                AttachReanim(aTrackInstance->mAttachmentID, aFlagReanim, 0.0f, 0.0f);
+                aBodyReanim->mFrameBasePose = 0;
+                SetupZombatarFlagReanim(aZombatarRecordIndex);
+            }
         }
 
         mPosX = WIDE_BOARD_WIDTH;
@@ -656,12 +659,15 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
             SetAnimRate(aAnimRate);
         }
 
-        Reanimation* aPropellerReanim = mApp->AddReanimation(0.0f, 0.0f, 0, aZombieDef.mReanimationType);
-        if (aPropellerReanim && aBodyReanim)
+        if (aBodyReanim)
         {
-            aPropellerReanim->SetFramesForLayer("Propeller");
-            aPropellerReanim->mLoopType = ReanimLoopType::REANIM_LOOP_FULL_LAST_FRAME;
-            aPropellerReanim->AttachToAnotherReanimation(aBodyReanim, "hat");
+            Reanimation* aPropellerReanim = mApp->AddReanimation(0.0f, 0.0f, 0, aZombieDef.mReanimationType);
+            if (aPropellerReanim)
+            {
+                aPropellerReanim->SetFramesForLayer("Propeller");
+                aPropellerReanim->mLoopType = ReanimLoopType::REANIM_LOOP_FULL_LAST_FRAME;
+                aPropellerReanim->AttachToAnotherReanimation(aBodyReanim, "hat");
+            }
         }
 
         mFlyingHealth = 20;
@@ -1089,7 +1095,7 @@ void Zombie::ReanimReenableClipping()
 void Zombie::LoadPlainZombieReanim()
 {
     mZombieAttackRect = Rect(20, 0, 50, 115);
-    Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
+    Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
     if (aBodyReanim == nullptr)
         return;
 
@@ -8953,7 +8959,10 @@ void Zombie::ApplyBurn()
 void Zombie::AttachShield()
 {
     const char* aTrackName;
-    Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
+    Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
+    if (aBodyReanim == nullptr)
+        return;
+
     if (mShieldType == ShieldType::SHIELDTYPE_DOOR)
     {
         ShowDoorArms(true);
@@ -10664,7 +10673,10 @@ void Zombie::BossDie()
 
 void Zombie::BossSetupReanim()
 {
-    Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
+    Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
+    if (aBodyReanim == nullptr)
+        return;
+
     aBodyReanim->AssignRenderGroupToPrefix("Boss_innerleg", RENDER_GROUP_BOSS_BACK_LEG);
     aBodyReanim->AssignRenderGroupToPrefix("Boss_outerleg", RENDER_GROUP_BOSS_FRONT_LEG);
     aBodyReanim->AssignRenderGroupToPrefix("Boss_body2", RENDER_GROUP_BOSS_FRONT_LEG);
