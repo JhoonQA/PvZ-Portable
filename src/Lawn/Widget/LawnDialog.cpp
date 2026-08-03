@@ -463,7 +463,7 @@ GameOverDialog::GameOverDialog(const std::string& theMessage, bool theShowChalle
     mLawnYesButton->SetLabel("[TRY_AGAIN]");
     if (theShowChallengeName)
     {
-        mDialogHeader = PvzpStringTranslate(mApp->GetCurrentChallengeDef().mChallengeName);
+        mDialogHeader = PvzpStringTranslate(mApp->GetCurrentChallengeDef()->mChallengeName);
     }
 
     if (theMessage.size() == 0)

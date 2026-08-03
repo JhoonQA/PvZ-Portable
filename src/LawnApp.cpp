@@ -2325,7 +2325,7 @@ int LawnApp::GetCurrentChallengeIndex()
 	return static_cast<int>(mGameMode) - static_cast<int>(GameMode::GAMEMODE_SURVIVAL_NORMAL_STAGE_1);
 }
 
-const ChallengeDefinition& LawnApp::GetCurrentChallengeDef()
+const ChallengeDefinition* LawnApp::GetCurrentChallengeDef()
 {
 	return GetChallengeDefinition(GetCurrentChallengeIndex());
 }
@@ -3234,8 +3234,8 @@ int LawnApp::GetNumTrophies(ChallengePage thePage)
 
 	for (int i = 0; i < NUM_CHALLENGE_MODES; i++)
 	{
-		const ChallengeDefinition& aDef = GetChallengeDefinition(i);
-		if (aDef.mPage == thePage && HasBeatenChallenge(aDef.mChallengeMode))
+		const ChallengeDefinition* aDef = GetChallengeDefinition(i);
+		if (aDef != nullptr && aDef->mPage == thePage && HasBeatenChallenge(aDef->mChallengeMode))
 		{
 			aNumTrophies++;
 		}
@@ -3332,7 +3332,7 @@ std::string LawnGetCurrentLevelName()
 		return StrFormat("F%d", gLawnApp->GetStageString(gLawnApp->mBoard->mLevel).c_str());
 	}
 
-	return gLawnApp->GetCurrentChallengeDef().mChallengeName;
+	return gLawnApp->GetCurrentChallengeDef()->mChallengeName;
 }
 
 bool LawnApp::CanDoPinataMode()

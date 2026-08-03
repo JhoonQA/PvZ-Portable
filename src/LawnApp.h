@@ -240,7 +240,7 @@ public:
 	static std::string				GetStageString(int theLevel);
 	/*inline*/ void					KillChallengeScreen();
 	void							ShowChallengeScreen(ChallengePage thePage);
-	const ChallengeDefinition&			GetCurrentChallengeDef();
+	const ChallengeDefinition*			GetCurrentChallengeDef();
 	void							CheckForGameEnd();
 	void							CloseRequestAsync() override;
 	/*inline*/ bool					IsChallengeWithoutSeedBank();

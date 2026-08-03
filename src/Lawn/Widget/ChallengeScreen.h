@@ -96,8 +96,8 @@ public:
     int                         mCol;
     const char*             mChallengeName;
 };
-extern const ChallengeDefinition gChallengeDefs[NUM_CHALLENGE_MODES];
+extern const ChallengeDefinition gChallengeDefs[];
 
-const ChallengeDefinition& GetChallengeDefinition(int theChallengeMode);
+const ChallengeDefinition* GetChallengeDefinition(int theChallengeMode);
 
 #endif

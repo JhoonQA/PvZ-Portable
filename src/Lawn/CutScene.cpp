@@ -901,7 +901,7 @@ void CutScene::StartLevelIntro()
 	{
 		if (mApp->IsSurvivalMode())
 		{
-			aHouseMessage = mApp->GetCurrentChallengeDef().mChallengeName;
+			aHouseMessage = mApp->GetCurrentChallengeDef()->mChallengeName;
 		}
 		else if (mApp->IsAdventureMode())
 		{
@@ -924,7 +924,7 @@ void CutScene::StartLevelIntro()
 		}
 		else
 		{
-			aHouseMessage = mApp->GetCurrentChallengeDef().mChallengeName;
+			aHouseMessage = mApp->GetCurrentChallengeDef()->mChallengeName;
 		}
 	}
 

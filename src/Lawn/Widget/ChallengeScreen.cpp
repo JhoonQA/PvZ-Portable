@@ -35,7 +35,7 @@
 #include <SDL.h>
 #include <algorithm>
 
-constinit const ChallengeDefinition gChallengeDefs[NUM_CHALLENGE_MODES] = {
+constinit const ChallengeDefinition gChallengeDefs[] = {
 	{ .mChallengeMode = GameMode::GAMEMODE_SURVIVAL_NORMAL_STAGE_1, .mChallengeIconIndex = 0, .mPage = ChallengePage::CHALLENGE_PAGE_SURVIVAL, .mRow = 0, .mCol = 0, .mChallengeName = "[SURVIVAL_DAY_NORMAL]" },
 	{ .mChallengeMode = GameMode::GAMEMODE_SURVIVAL_NORMAL_STAGE_2, .mChallengeIconIndex = 1, .mPage = ChallengePage::CHALLENGE_PAGE_SURVIVAL, .mRow = 0, .mCol = 1, .mChallengeName = "[SURVIVAL_NIGHT_NORMAL]" },
 	{ .mChallengeMode = GameMode::GAMEMODE_SURVIVAL_NORMAL_STAGE_3, .mChallengeIconIndex = 2, .mPage = ChallengePage::CHALLENGE_PAGE_SURVIVAL, .mRow = 0, .mCol = 2, .mChallengeName = "[SURVIVAL_POOL_NORMAL]" },
@@ -84,7 +84,7 @@ constinit const ChallengeDefinition gChallengeDefs[NUM_CHALLENGE_MODES] = {
 	{ .mChallengeMode = GameMode::GAMEMODE_CHALLENGE_SHOVEL, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 2, .mCol = 0, .mChallengeName = "[CAN_YOU_DIG_IT]" },
 	{ .mChallengeMode = GameMode::GAMEMODE_CHALLENGE_STORMY_NIGHT, .mChallengeIconIndex = 13, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 2, .mCol = 1, .mChallengeName = "[DARK_STORMY_NIGHT]" },
 	{ .mChallengeMode = GameMode::GAMEMODE_CHALLENGE_BUNGEE_BLITZ, .mChallengeIconIndex = 9, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 2, .mCol = 2, .mChallengeName = "[BUNGEE_BLITZ]" },
-	{ .mChallengeMode = GameMode::GAMEMODE_CHALLENGE_SQUIRREL, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 2, .mCol = 3, .mChallengeName = "Squirrel" },
+	{ .mChallengeMode = GameMode::GAMEMODE_INTRO, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 2, .mCol = 3, .mChallengeName = "Intro" },
 	{ .mChallengeMode = GameMode::GAMEMODE_TREE_OF_WISDOM, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 2, .mCol = 4, .mChallengeName = "Tree of Wisdom" }, // @Patoke: replaced for english
 	{ .mChallengeMode = GameMode::GAMEMODE_SCARY_POTTER_1, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_PUZZLE, .mRow = 0, .mCol = 0, .mChallengeName = "[SCARY_POTTER_1]" },
 	{ .mChallengeMode = GameMode::GAMEMODE_SCARY_POTTER_2, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_PUZZLE, .mRow = 0, .mCol = 1, .mChallengeName = "[SCARY_POTTER_2]" },
@@ -106,8 +106,7 @@ constinit const ChallengeDefinition gChallengeDefs[NUM_CHALLENGE_MODES] = {
 	{ .mChallengeMode = GameMode::GAMEMODE_PUZZLE_I_ZOMBIE_8, .mChallengeIconIndex = 11, .mPage = ChallengePage::CHALLENGE_PAGE_PUZZLE, .mRow = 3, .mCol = 2, .mChallengeName = "[I_ZOMBIE_8]" },
 	{ .mChallengeMode = GameMode::GAMEMODE_PUZZLE_I_ZOMBIE_9, .mChallengeIconIndex = 11, .mPage = ChallengePage::CHALLENGE_PAGE_PUZZLE, .mRow = 3, .mCol = 3, .mChallengeName = "[I_ZOMBIE_9]" },
 	{ .mChallengeMode = GameMode::GAMEMODE_PUZZLE_I_ZOMBIE_ENDLESS, .mChallengeIconIndex = 11, .mPage = ChallengePage::CHALLENGE_PAGE_PUZZLE, .mRow = 3, .mCol = 4, .mChallengeName = "[I_ZOMBIE_ENDLESS]" },
-	{ .mChallengeMode = GameMode::GAMEMODE_UPSELL, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 3, .mCol = 4, .mChallengeName = "Upsell" },
-	{ .mChallengeMode = GameMode::GAMEMODE_INTRO, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 2, .mCol = 3, .mChallengeName = "Intro" }
+	{ .mChallengeMode = GameMode::GAMEMODE_UPSELL, .mChallengeIconIndex = 10, .mPage = ChallengePage::CHALLENGE_PAGE_LIMBO, .mRow = 3, .mCol = 4, .mChallengeName = "Upsell" }
 };
 
 // GOTY @Patoke: 0x430810
@@ -160,15 +159,17 @@ ChallengeScreen::ChallengeScreen(LawnApp* theApp, ChallengePage thePage)
 	
 	for (int aChallengeMode = 0; aChallengeMode < NUM_CHALLENGE_MODES; aChallengeMode++)
 	{
-		const ChallengeDefinition& aChlDef = GetChallengeDefinition(aChallengeMode);
+		const ChallengeDefinition* aChlDef = GetChallengeDefinition(aChallengeMode);
+		if (aChlDef == nullptr)
+			continue;
 		ButtonWidget* aChallengeButton = new ButtonWidget(ChallengeScreen::ChallengeScreen_Mode + aChallengeMode, this);
 		mChallengeButtons[aChallengeMode] = aChallengeButton;
 		aChallengeButton->mDoFinger = true;
 		aChallengeButton->mFrameNoDraw = true;
-		if (aChlDef.mPage == CHALLENGE_PAGE_CHALLENGE || aChlDef.mPage == CHALLENGE_PAGE_LIMBO || aChlDef.mPage == CHALLENGE_PAGE_PUZZLE)
-			aChallengeButton->Resize(38 + aChlDef.mCol * 155, 93 + aChlDef.mRow * 119, 104, 115);
+		if (aChlDef->mPage == CHALLENGE_PAGE_CHALLENGE || aChlDef->mPage == CHALLENGE_PAGE_LIMBO || aChlDef->mPage == CHALLENGE_PAGE_PUZZLE)
+			aChallengeButton->Resize(38 + aChlDef->mCol * 155, 93 + aChlDef->mRow * 119, 104, 115);
 		else
-			aChallengeButton->Resize(38 + aChlDef.mCol * 155, 125 + aChlDef.mRow * 145, 104, 115);
+			aChallengeButton->Resize(38 + aChlDef->mCol * 155, 125 + aChlDef->mRow * 145, 104, 115);
 		if (MoreTrophiesNeeded(aChallengeMode))
 		{
 			aChallengeButton->mDoFinger = false;
@@ -218,15 +219,15 @@ ChallengeScreen::~ChallengeScreen()
 	delete mToolTip;
 }
 
-const ChallengeDefinition& GetChallengeDefinition(int theChallengeMode)
+const ChallengeDefinition* GetChallengeDefinition(int theChallengeMode)
 {
-	PVZP_ASSERT(theChallengeMode >= 0 && theChallengeMode < NUM_CHALLENGE_MODES);
-
-	const ChallengeDefinition& aDef = gChallengeDefs[theChallengeMode];
-	(void)aDef; // Unused in Release mode
-	PVZP_ASSERT(aDef.mChallengeMode == theChallengeMode + GAMEMODE_SURVIVAL_NORMAL_STAGE_1);
-
-	return gChallengeDefs[theChallengeMode];
+	// Lookup by field, not by position: modes without a table entry (unimplemented leftovers) get nullptr.
+	for (const ChallengeDefinition& aDef : gChallengeDefs)
+	{
+		if (aDef.mChallengeMode == theChallengeMode + GAMEMODE_SURVIVAL_NORMAL_STAGE_1)
+			return &aDef;
+	}
+	return nullptr;
 }
 
 bool ChallengeScreen::IsScaryPotterLevel(GameMode theGameMode)
@@ -246,10 +247,10 @@ void ChallengeScreen::SetUnlockChallengeIndex(ChallengePage thePage, bool theIsI
 	mUnlockChallengeIndex = 0;
 	for (int aChallengeMode = 0; aChallengeMode < NUM_CHALLENGE_MODES; aChallengeMode++)
 	{
-		const ChallengeDefinition& aDef = GetChallengeDefinition(aChallengeMode);
-		if (aDef.mPage == thePage)
+		const ChallengeDefinition* aDef = GetChallengeDefinition(aChallengeMode);
+		if (aDef != nullptr && aDef->mPage == thePage)
 		{
-			if (thePage != CHALLENGE_PAGE_PUZZLE || (!theIsIZombie && IsScaryPotterLevel(aDef.mChallengeMode)) || (theIsIZombie && IsIZombieLevel(aDef.mChallengeMode)))
+			if (thePage != CHALLENGE_PAGE_PUZZLE || (!theIsIZombie && IsScaryPotterLevel(aDef->mChallengeMode)) || (theIsIZombie && IsIZombieLevel(aDef->mChallengeMode)))
 			{
 				if (AccomplishmentsNeeded(aChallengeMode) <= 0)
 				{
@@ -262,31 +263,31 @@ void ChallengeScreen::SetUnlockChallengeIndex(ChallengePage thePage, bool theIsI
 
 int ChallengeScreen::MoreTrophiesNeeded(int theChallengeIndex)
 {
-	const ChallengeDefinition& aDef = GetChallengeDefinition(theChallengeIndex);
+	const ChallengeDefinition* aDef = GetChallengeDefinition(theChallengeIndex);
 	if (mApp->mGameMode == GAMEMODE_UPSELL && mApp->mGameScene == SCENE_LEVEL_INTRO)
 	{
-		return aDef.mChallengeMode == GAMEMODE_CHALLENGE_FINAL_BOSS ? 1 : 0;
+		return aDef->mChallengeMode == GAMEMODE_CHALLENGE_FINAL_BOSS ? 1 : 0;
 	}
 	
 	if (mApp->IsTrialStageLocked())
 	{
-		if (mPageIndex == CHALLENGE_PAGE_PUZZLE && aDef.mChallengeMode >= GAMEMODE_SCARY_POTTER_4)
+		if (mPageIndex == CHALLENGE_PAGE_PUZZLE && aDef->mChallengeMode >= GAMEMODE_SCARY_POTTER_4)
 		{
-			return aDef.mChallengeMode == GAMEMODE_SCARY_POTTER_4 ? 1 : 2;
+			return aDef->mChallengeMode == GAMEMODE_SCARY_POTTER_4 ? 1 : 2;
 		}
-		else if (mPageIndex == CHALLENGE_PAGE_CHALLENGE && aDef.mChallengeMode >= GAMEMODE_CHALLENGE_RAINING_SEEDS)
+		else if (mPageIndex == CHALLENGE_PAGE_CHALLENGE && aDef->mChallengeMode >= GAMEMODE_CHALLENGE_RAINING_SEEDS)
 		{
-			return aDef.mChallengeMode == GAMEMODE_CHALLENGE_RAINING_SEEDS ? 1 : 2;
+			return aDef->mChallengeMode == GAMEMODE_CHALLENGE_RAINING_SEEDS ? 1 : 2;
 		}
-		else if (mPageIndex == CHALLENGE_PAGE_SURVIVAL && aDef.mChallengeMode >= GAMEMODE_SURVIVAL_NORMAL_STAGE_4)
+		else if (mPageIndex == CHALLENGE_PAGE_SURVIVAL && aDef->mChallengeMode >= GAMEMODE_SURVIVAL_NORMAL_STAGE_4)
 		{
-			return aDef.mChallengeMode == GAMEMODE_SURVIVAL_NORMAL_STAGE_4 ? 1 : 2;
+			return aDef->mChallengeMode == GAMEMODE_SURVIVAL_NORMAL_STAGE_4 ? 1 : 2;
 		}
 	}
 
-	if (aDef.mPage == CHALLENGE_PAGE_PUZZLE)
+	if (aDef->mPage == CHALLENGE_PAGE_PUZZLE)
 	{
-		if (IsScaryPotterLevel(aDef.mChallengeMode))
+		if (IsScaryPotterLevel(aDef->mChallengeMode))
 		{
 			int aLevelsCompleted = 0;
 			for (const ChallengeDefinition& aSPDef : gChallengeDefs)
@@ -297,16 +298,16 @@ int ChallengeScreen::MoreTrophiesNeeded(int theChallengeIndex)
 				}
 			}
 
-			if (aDef.mChallengeMode < GAMEMODE_SCARY_POTTER_4 || mApp->HasFinishedAdventure() || aLevelsCompleted < 3)
+			if (aDef->mChallengeMode < GAMEMODE_SCARY_POTTER_4 || mApp->HasFinishedAdventure() || aLevelsCompleted < 3)
 			{
-				return std::clamp(aDef.mChallengeMode - GAMEMODE_SCARY_POTTER_1 - aLevelsCompleted, 0, 9);
+				return std::clamp(aDef->mChallengeMode - GAMEMODE_SCARY_POTTER_1 - aLevelsCompleted, 0, 9);
 			}
 			else
 			{
-				return aDef.mChallengeMode == GAMEMODE_SCARY_POTTER_4 ? 1 : 2;
+				return aDef->mChallengeMode == GAMEMODE_SCARY_POTTER_4 ? 1 : 2;
 			}
 		}
-		else if (IsIZombieLevel(aDef.mChallengeMode))
+		else if (IsIZombieLevel(aDef->mChallengeMode))
 		{
 			int aLevelsCompleted = 0;
 			for (const ChallengeDefinition& aIZDef : gChallengeDefs)
@@ -317,35 +318,35 @@ int ChallengeScreen::MoreTrophiesNeeded(int theChallengeIndex)
 				}
 			}
 
-			if (aDef.mChallengeMode < GAMEMODE_PUZZLE_I_ZOMBIE_4 || mApp->HasFinishedAdventure() || aLevelsCompleted < 3)
+			if (aDef->mChallengeMode < GAMEMODE_PUZZLE_I_ZOMBIE_4 || mApp->HasFinishedAdventure() || aLevelsCompleted < 3)
 			{
-				return std::clamp(aDef.mChallengeMode - GAMEMODE_PUZZLE_I_ZOMBIE_1 - aLevelsCompleted, 0, 9);
+				return std::clamp(aDef->mChallengeMode - GAMEMODE_PUZZLE_I_ZOMBIE_1 - aLevelsCompleted, 0, 9);
 			}
 			else
 			{
-				return aDef.mChallengeMode == GAMEMODE_PUZZLE_I_ZOMBIE_4 ? 1 : 2;
+				return aDef->mChallengeMode == GAMEMODE_PUZZLE_I_ZOMBIE_4 ? 1 : 2;
 			}
 		}
 	}
 	else
 	{
-		int aIdxInPage = aDef.mRow * 5 + aDef.mCol;
-		if ((aDef.mPage == CHALLENGE_PAGE_CHALLENGE || aDef.mPage == CHALLENGE_PAGE_SURVIVAL) && !mApp->HasFinishedAdventure())
+		int aIdxInPage = aDef->mRow * 5 + aDef->mCol;
+		if ((aDef->mPage == CHALLENGE_PAGE_CHALLENGE || aDef->mPage == CHALLENGE_PAGE_SURVIVAL) && !mApp->HasFinishedAdventure())
 		{
 			return aIdxInPage < 3 ? 0 : aIdxInPage == 3 ? 1 : 2;
 		}
 		else
 		{
-			int aNumTrophies = mApp->GetNumTrophies(aDef.mPage);
-			if (aDef.mPage == CHALLENGE_PAGE_LIMBO)
+			int aNumTrophies = mApp->GetNumTrophies(aDef->mPage);
+			if (aDef->mPage == CHALLENGE_PAGE_LIMBO)
 			{
 				return 0;
 			}
-			if (mApp->IsSurvivalEndless(aDef.mChallengeMode))
+			if (mApp->IsSurvivalEndless(aDef->mChallengeMode))
 			{
 				return 10 - aNumTrophies;
 			}
-			if (aDef.mPage == CHALLENGE_PAGE_SURVIVAL || aDef.mPage == CHALLENGE_PAGE_CHALLENGE)
+			if (aDef->mPage == CHALLENGE_PAGE_SURVIVAL || aDef->mPage == CHALLENGE_PAGE_CHALLENGE)
 			{
 				aNumTrophies += 3;
 			}
@@ -369,7 +370,12 @@ bool ChallengeScreen::ShowPageButtons()
 void ChallengeScreen::UpdateButtons()
 {
 	for (int aChallengeMode = 0; aChallengeMode < NUM_CHALLENGE_MODES; aChallengeMode++)
-		mChallengeButtons[aChallengeMode]->mVisible = GetChallengeDefinition(aChallengeMode).mPage == mPageIndex;
+	{
+		const ChallengeDefinition* aDef = GetChallengeDefinition(aChallengeMode);
+		if (aDef == nullptr)
+			continue;
+		mChallengeButtons[aChallengeMode]->mVisible = aDef->mPage == mPageIndex;
+	}
 	for (int aPage = 0; aPage < MAX_CHALLANGE_PAGES; aPage++)
 	{
 		ButtonWidget* aPageButton = mPageButton[aPage];
@@ -393,7 +399,7 @@ void ChallengeScreen::UpdateButtons()
 int ChallengeScreen::AccomplishmentsNeeded(int theChallengeIndex)
 {
 	int aTrophiesNeeded = MoreTrophiesNeeded(theChallengeIndex);
-	GameMode aGameMode = GetChallengeDefinition(theChallengeIndex).mChallengeMode;
+	GameMode aGameMode = GetChallengeDefinition(theChallengeIndex)->mChallengeMode;
 	if (mApp->IsSurvivalEndless(aGameMode) && aTrophiesNeeded <= 3 && mApp->GetNumTrophies(CHALLENGE_PAGE_SURVIVAL) < 10 &&
 		mApp->HasFinishedAdventure() && !mApp->IsTrialStageLocked()) aTrophiesNeeded = 1;
 	return mCheatEnableChallenges ? 0 : aTrophiesNeeded;
@@ -404,7 +410,7 @@ void ChallengeScreen::DrawButton(Graphics* g, int theChallengeIndex)
 	ButtonWidget* aChallengeButton = mChallengeButtons[theChallengeIndex];
 	if (aChallengeButton->mVisible)
 	{
-		const ChallengeDefinition& aDef = GetChallengeDefinition(theChallengeIndex);
+		const ChallengeDefinition* aDef = GetChallengeDefinition(theChallengeIndex);
 		int aPosX = aChallengeButton->mX;
 		int aPosY = aChallengeButton->mY;
 		if (aChallengeButton->mIsDown)
@@ -439,11 +445,11 @@ void ChallengeScreen::DrawButton(Graphics* g, int theChallengeIndex)
 
 			if (mPageIndex == CHALLENGE_PAGE_SURVIVAL)
 			{
-				g->DrawImageCel(Sexy::IMAGE_SURVIVAL_THUMBNAILS, aPosX + 13, aPosY + 4, aDef.mChallengeIconIndex);
+				g->DrawImageCel(Sexy::IMAGE_SURVIVAL_THUMBNAILS, aPosX + 13, aPosY + 4, aDef->mChallengeIconIndex);
 			}
 			else
 			{
-				g->DrawImageCel(Sexy::IMAGE_CHALLENGE_THUMBNAILS, aPosX + 13, aPosY + 4, aDef.mChallengeIconIndex);
+				g->DrawImageCel(Sexy::IMAGE_CHALLENGE_THUMBNAILS, aPosX + 13, aPosY + 4, aDef->mChallengeIconIndex);
 			}
 
 			// ============================================================================================
@@ -457,7 +463,7 @@ void ChallengeScreen::DrawButton(Graphics* g, int theChallengeIndex)
 			// ▲ 绘制小游戏的名称
 			// ============================================================================================
 			Color aTextColor = aHighLight ? Color(250, 40, 40) : Color(42, 42, 90);
-			std::string aName = PvzpStringTranslate(aDef.mChallengeName);
+			std::string aName = PvzpStringTranslate(aDef->mChallengeName);
 			if (aChallengeButton->mDisabled || (theChallengeIndex == mUnlockChallengeIndex && mUnlockState == UNLOCK_SHAKING))
 			{
 				aName = "?";
@@ -550,17 +556,17 @@ void ChallengeScreen::DrawButton(Graphics* g, int theChallengeIndex)
 			}
 			else if (aRecord > 0)
 			{
-				if (mApp->HasBeatenChallenge(aDef.mChallengeMode))
+				if (mApp->HasBeatenChallenge(aDef->mChallengeMode))
 				{
 					g->DrawImage(Sexy::IMAGE_MINIGAME_TROPHY, aPosX - 6, aPosY - 2);
 				}
-				else if (mApp->IsEndlessScaryPotter(aDef.mChallengeMode) || mApp->IsEndlessIZombie(aDef.mChallengeMode))
+				else if (mApp->IsEndlessScaryPotter(aDef->mChallengeMode) || mApp->IsEndlessIZombie(aDef->mChallengeMode))
 				{
 					std::string aAchievement = mApp->Pluralize(aRecord, "[ONE_FLAG]", "[COUNT_FLAGS]");
 					PvzpDrawString(g, aAchievement, aPosX + 48, aPosY + 48, Sexy::FONT_CONTINUUMBOLD14OUTLINE, Color::White, DS_ALIGN_CENTER);
 					PvzpDrawString(g, aAchievement, aPosX + 48, aPosY + 48, Sexy::FONT_CONTINUUMBOLD14, Color(255, 0, 0), DS_ALIGN_CENTER);
 				}
-				else if (mApp->IsSurvivalEndless(aDef.mChallengeMode))
+				else if (mApp->IsSurvivalEndless(aDef->mChallengeMode))
 				{
 					std::string aAchievement = PvzpReplaceNumberString("[LONGEST_STREAK]", "{STREAK}", aRecord);
 					Rect aRect(aPosX, aPosY + 15, 96, 200);
@@ -700,7 +706,9 @@ void ChallengeScreen::UpdateToolTip()
 
 	for (int aChallengeMode = 0; aChallengeMode < NUM_CHALLENGE_MODES; aChallengeMode++)
 	{
-		const ChallengeDefinition& aDef = GetChallengeDefinition(aChallengeMode);
+		const ChallengeDefinition* aDef = GetChallengeDefinition(aChallengeMode);
+		if (aDef == nullptr)
+			continue;
 		ButtonWidget* aChallengeButton = mChallengeButtons[aChallengeMode];
 		if (aChallengeButton->mVisible && aChallengeButton->mDisabled &&
 			aChallengeButton->Contains(mApp->mWidgetManager->mLastMouseX, mApp->mWidgetManager->mLastMouseY) &&
@@ -713,9 +721,9 @@ void ChallengeScreen::UpdateToolTip()
 				std::string aLabel;
 				if (mPageIndex == CHALLENGE_PAGE_PUZZLE)
 				{
-					if (IsScaryPotterLevel(aDef.mChallengeMode))
+					if (IsScaryPotterLevel(aDef->mChallengeMode))
 					{
-						if (!mApp->HasFinishedAdventure() && aDef.mChallengeMode == GAMEMODE_SCARY_POTTER_4)
+						if (!mApp->HasFinishedAdventure() && aDef->mChallengeMode == GAMEMODE_SCARY_POTTER_4)
 						{
 							aLabel = "[FINISH_ADVENTURE_TOOLTIP]";
 						}
@@ -724,9 +732,9 @@ void ChallengeScreen::UpdateToolTip()
 							aLabel = "[ONE_MORE_SCARY_POTTER_TOOLTIP]";
 						}
 					}
-					else if (IsIZombieLevel(aDef.mChallengeMode))
+					else if (IsIZombieLevel(aDef->mChallengeMode))
 					{
-						if (!mApp->HasFinishedAdventure() && aDef.mChallengeMode == GAMEMODE_PUZZLE_I_ZOMBIE_4)
+						if (!mApp->HasFinishedAdventure() && aDef->mChallengeMode == GAMEMODE_PUZZLE_I_ZOMBIE_4)
 						{
 							aLabel = "[FINISH_ADVENTURE_TOOLTIP]";
 						}
@@ -740,7 +748,7 @@ void ChallengeScreen::UpdateToolTip()
 				{
 					aLabel = "[FINISH_ADVENTURE_TOOLTIP]";
 				}
-				else if (mApp->IsSurvivalEndless(aDef.mChallengeMode))
+				else if (mApp->IsSurvivalEndless(aDef->mChallengeMode))
 				{
 					aLabel = "[10_SURVIVAL_TOOLTIP]";
 				}

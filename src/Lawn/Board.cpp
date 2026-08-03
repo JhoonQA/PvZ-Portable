@@ -6840,7 +6840,7 @@ void Board::DrawLevel(Graphics* g)
 	}
 	else
 	{
-		aLevelStr = mApp->GetCurrentChallengeDef().mChallengeName;
+		aLevelStr = mApp->GetCurrentChallengeDef()->mChallengeName;
 		if (mApp->IsSurvivalMode() || mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_LAST_STAND)
 		{
 			int aFlags = GetSurvivalFlagsCompleted();
