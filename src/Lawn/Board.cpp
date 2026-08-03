@@ -2731,7 +2731,8 @@ bool Board::CanAddBobSled()
 // GOTY @Patoke: 0x410700
 Zombie* Board::AddZombieInRow(ZombieType theZombieType, int theRow, int theFromWave)
 {
-	if (mZombies.mSize >= mZombies.mMaxSize - 1)
+	const int aRequiredSlots = (theZombieType == ZombieType::ZOMBIE_BOBSLED) ? 4 : 1; // sled + 3 followers; the unchecked follower allocs below rely on this
+	if (mZombies.mSize >= mZombies.mMaxSize - aRequiredSlots)
 	{
 		PvzpTrace("Too many zombies!!");
 		return nullptr;
@@ -6098,9 +6099,19 @@ bool RenderItemSortFunc(const RenderItem& theItem1, const RenderItem& theItem2)
 	return theItem1.mZPos < theItem2.mZPos;
 }
 
+static inline bool RenderListFull(int theCurRenderItem)
+{
+	if (theCurRenderItem >= MAX_RENDER_ITEMS)
+	{
+		PvzpTraceWithoutSpamming("Too many render items!\n");
+		return true;
+	}
+	return false;
+}
+
 void Board::AddBossRenderItem(RenderItem* theRenderList, int& theCurRenderItem, Zombie* theBossZombie)
 {
-	PVZP_ASSERT(theCurRenderItem < MAX_RENDER_ITEMS);
+	if (RenderListFull(theCurRenderItem)) return;
 	int aBackLegRow = 1;
 	int aFrontLegRow = 3;
 	int aBackArmRow = 4;
@@ -6171,7 +6182,7 @@ static inline void AddGameObjectRenderItem(RenderItem* theRenderList, int& theCu
 
 static inline void AddGameObjectRenderItemCursorPreview(RenderItem* theRenderList, int& theCurRenderItem, RenderObjectType theRenderObjectType, GameObject* theGameObject)
 {
-	PVZP_ASSERT(theCurRenderItem < MAX_RENDER_ITEMS);
+	if (RenderListFull(theCurRenderItem)) return;
 	RenderItem& aRenderItem = theRenderList[theCurRenderItem];
 	aRenderItem.mRenderObjectType = theRenderObjectType;
 	aRenderItem.mZPos = theGameObject->mRenderOrder;
@@ -6183,7 +6194,7 @@ static inline void AddGameObjectRenderItemCursorPreview(RenderItem* theRenderLis
 
 static inline void AddGameObjectRenderItemPlant(RenderItem* theRenderList, int& theCurRenderItem, RenderObjectType theRenderObjectType, GameObject* theGameObject)
 {
-	PVZP_ASSERT(theCurRenderItem < MAX_RENDER_ITEMS);
+	if (RenderListFull(theCurRenderItem)) return;
 	RenderItem& aRenderItem = theRenderList[theCurRenderItem];
 	aRenderItem.mRenderObjectType = theRenderObjectType;
 	aRenderItem.mZPos = theGameObject->mRenderOrder;
@@ -6195,7 +6206,7 @@ static inline void AddGameObjectRenderItemPlant(RenderItem* theRenderList, int& 
 
 static inline void AddGameObjectRenderItemZombie(RenderItem* theRenderList, int& theCurRenderItem, RenderObjectType theRenderObjectType, GameObject* theGameObject)
 {
-	PVZP_ASSERT(theCurRenderItem < MAX_RENDER_ITEMS);
+	if (RenderListFull(theCurRenderItem)) return;
 	RenderItem& aRenderItem = theRenderList[theCurRenderItem];
 	aRenderItem.mRenderObjectType = theRenderObjectType;
 	aRenderItem.mZPos = theGameObject->mRenderOrder;
@@ -6206,7 +6217,7 @@ static inline void AddGameObjectRenderItemZombie(RenderItem* theRenderList, int&
 
 static inline void AddGameObjectRenderItemProjectile(RenderItem* theRenderList, int& theCurRenderItem, RenderObjectType theRenderObjectType, GameObject* theGameObject)
 {
-	PVZP_ASSERT(theCurRenderItem < MAX_RENDER_ITEMS);
+	if (RenderListFull(theCurRenderItem)) return;
 	RenderItem& aRenderItem = theRenderList[theCurRenderItem];
 	aRenderItem.mRenderObjectType = theRenderObjectType;
 	aRenderItem.mZPos = theGameObject->mRenderOrder;
@@ -6217,7 +6228,7 @@ static inline void AddGameObjectRenderItemProjectile(RenderItem* theRenderList, 
 
 static inline void AddGameObjectRenderItemCoin(RenderItem* theRenderList, int& theCurRenderItem, RenderObjectType theRenderObjectType, GameObject* theGameObject)
 {
-	PVZP_ASSERT(theCurRenderItem < MAX_RENDER_ITEMS);
+	if (RenderListFull(theCurRenderItem)) return;
 	RenderItem& aRenderItem = theRenderList[theCurRenderItem];
 	aRenderItem.mRenderObjectType = theRenderObjectType;
 	aRenderItem.mZPos = theGameObject->mRenderOrder;
@@ -6228,7 +6239,7 @@ static inline void AddGameObjectRenderItemCoin(RenderItem* theRenderList, int& t
 
 static inline void AddUIRenderItem(RenderItem* theRenderList, int& theCurRenderItem, RenderObjectType theRenderObjectType, int thePosZ)
 {
-	PVZP_ASSERT(theCurRenderItem < MAX_RENDER_ITEMS);
+	if (RenderListFull(theCurRenderItem)) return;
 	RenderItem& aRenderItem = theRenderList[theCurRenderItem];
 	aRenderItem.mRenderObjectType = theRenderObjectType;
 	aRenderItem.mZPos = thePosZ;
@@ -6242,6 +6253,13 @@ void Board::DrawGameObjects(Graphics* g)
 
 	RenderItem aRenderList[MAX_RENDER_ITEMS];
 	int aRenderItemCount = 0;
+	RenderItem aDummyRenderItem; // sink for writes when the list is full
+	auto AllocRenderItem = [&]() -> RenderItem& // the list's single checked slot allocator
+	{
+		if (RenderListFull(aRenderItemCount))
+			return aDummyRenderItem;
+		return aRenderList[aRenderItemCount++];
+	};
 
 	{
 		for (Plant* aPlant : mPlants)
@@ -6254,20 +6272,18 @@ void Board::DrawGameObjects(Graphics* g)
 
 				if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN && aPlant->mPottedPlantIndex != -1)
 				{
-					RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+					RenderItem& aRenderItem = AllocRenderItem();
 					aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_PLANT_OVERLAY;
 					aRenderItem.mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_PARTICLE, 0, mY);
 					aRenderItem.mPlant = aPlant;
-					aRenderItemCount++;
 				}
 
 				if ((aPlant->mSeedType == SeedType::SEED_MAGNETSHROOM || aPlant->mSeedType == SeedType::SEED_GOLD_MAGNET) && aPlant->DrawMagnetItemsOnTop())
 				{
-					RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+					RenderItem& aRenderItem = AllocRenderItem();
 					aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_PLANT_MAGNET_ITEMS;
 					aRenderItem.mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_TOP, 0, -1);
 					aRenderItem.mPlant = aPlant;
-					aRenderItemCount++;
 				}
 			}
 		}
@@ -6295,20 +6311,18 @@ void Board::DrawGameObjects(Graphics* g)
 
 				if (aZombie->HasShadow())
 				{
-					RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+					RenderItem& aRenderItem = AllocRenderItem();
 					aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_ZOMBIE_SHADOW;
 					aRenderItem.mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_GROUND, aZombie->mRow, 3);
 					aRenderItem.mZombie = aZombie;
-					aRenderItemCount++;
 				}
 
 				if (aZombie->mZombieType == ZombieType::ZOMBIE_BUNGEE)
 				{
-					RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+					RenderItem& aRenderItem = AllocRenderItem();
 					aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_ZOMBIE_BUNGEE_TARGET;
 					aRenderItem.mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_PROJECTILE, aZombie->mRow, 1);
 					aRenderItem.mZombie = aZombie;
-					aRenderItemCount++;
 				}
 			}
 		}
@@ -6320,11 +6334,10 @@ void Board::DrawGameObjects(Graphics* g)
 				continue;
 			AddGameObjectRenderItemProjectile(aRenderList, aRenderItemCount, RenderObjectType::RENDER_ITEM_PROJECTILE, aProjectile);
 
-			RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+			RenderItem& aRenderItem = AllocRenderItem();
 			aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_PROJECTILE_SHADOW;
 			aRenderItem.mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_GROUND, aProjectile->mRow, 3);
 			aRenderItem.mProjectile = aProjectile;
-			aRenderItemCount++;
 		}
 	}
 	{
@@ -6332,11 +6345,10 @@ void Board::DrawGameObjects(Graphics* g)
 		{
 			if (aLawnMower->mDead)
 				continue;
-			RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+			RenderItem& aRenderItem = AllocRenderItem();
 			aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_MOWER;
 			aRenderItem.mZPos = aLawnMower->mRenderOrder;
 			aRenderItem.mMower = aLawnMower;
-			aRenderItemCount++;
 		}
 	}
 	{
@@ -6346,11 +6358,10 @@ void Board::DrawGameObjects(Graphics* g)
 				continue;
 			if (!aParticle->mIsAttachment)
 			{
-				RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+				RenderItem& aRenderItem = AllocRenderItem();
 				aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_PARTICLE;
 				aRenderItem.mZPos = aParticle->mRenderOrder;
 				aRenderItem.mParticleSytem = aParticle;
-				aRenderItemCount++;
 			}
 		}
 	}
@@ -6361,11 +6372,10 @@ void Board::DrawGameObjects(Graphics* g)
 				continue;
 			if (!aReanimation->mIsAttachment)
 			{
-				RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+				RenderItem& aRenderItem = AllocRenderItem();
 				aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_REANIMATION;
 				aRenderItem.mZPos = aReanimation->mRenderOrder;
 				aRenderItem.mReanimation = aReanimation;
-				aRenderItemCount++;
 			}
 		}
 	}
@@ -6374,19 +6384,17 @@ void Board::DrawGameObjects(Graphics* g)
 		{
 			if (aGridItem->mDead)
 				continue;
-			RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+			RenderItem& aRenderItem = AllocRenderItem();
 			aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_GRID_ITEM;
 			aRenderItem.mZPos = aGridItem->mRenderOrder;
 			aRenderItem.mGridItem = aGridItem;
-			aRenderItemCount++;
 
 			if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN && aGridItem->mGridItemType == GridItemType::GRIDITEM_STINKY)
 			{
-				RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+				RenderItem& aRenderItem = AllocRenderItem();
 				aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_GRID_ITEM_OVERLAY;
 				aRenderItem.mZPos = MakeRenderOrder(RenderLayer::RENDER_LAYER_PARTICLE, 0, aGridItem->mPosY - 30.0f);
 				aRenderItem.mGridItem = aGridItem;
-				aRenderItemCount++;
 			}
 		}
 	}
@@ -6394,11 +6402,10 @@ void Board::DrawGameObjects(Graphics* g)
 	{
 		if (mIceTimer[i])
 		{
-			RenderItem& aRenderItem = aRenderList[aRenderItemCount];
+			RenderItem& aRenderItem = AllocRenderItem();
 			aRenderItem.mRenderObjectType = RenderObjectType::RENDER_ITEM_ICE;
 			aRenderItem.mBoardGridY = i;
 			aRenderItem.mZPos = GetIceZPos(i);
-			aRenderItemCount++;
 		}
 	}
 	{

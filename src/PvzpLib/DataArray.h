@@ -155,7 +155,12 @@ public:
 
 	T* DataArrayAlloc()
 	{
-		PVZP_ASSERT(mSize < mMaxSize, "Data array full: %s", mName);
+		if (mSize >= mMaxSize)
+		{
+			PvzpTraceWithoutSpamming("Data array full: %s\n", mName);
+			return nullptr;
+		}
+
 		PVZP_ASSERT(mFreeListHead <= mMaxUsedCount, "DataArrayAlloc error in %s", mName);
 		unsigned int aNext = mMaxUsedCount;
 		if (mFreeListHead == mMaxUsedCount)
