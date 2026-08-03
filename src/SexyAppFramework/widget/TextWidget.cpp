@@ -30,16 +30,6 @@
 
 using namespace Sexy;
 
-TextWidget::TextWidget()
-{
-	mFont = nullptr;
-	mPosition = 0;
-	mPageSize = 0;
-	mStickToBottom = true;
-	mMaxLines = 2048;
-	mScrollbar = nullptr;
-}
-
 std::vector<std::string> TextWidget::GetLines()
 {
 	return mLogicalLines;
@@ -69,9 +59,8 @@ void TextWidget::DrawColorString(Graphics* g, std::string_view theString, int x,
 	std::string aCurString = "";
 	for (int i = 0; i < (int)theString.length(); i++)
 	{
-		// Widestrings are cringe, can safely compare to zero
-		// if (theString[i] == 0x100)
-		if (theString[i] == 0x00)
+		// color marker: 0xFF followed by 3 RGB bytes
+		if (theString[i] == (char)0xFF)
 		{
 			if (aCurString.length() > 0)
 				g->DrawString(aCurString, x + aWidth, y);
@@ -79,7 +68,7 @@ void TextWidget::DrawColorString(Graphics* g, std::string_view theString, int x,
 			aWidth += g->GetFont()->StringWidth(aCurString);
 			aCurString = "";
 			if (useColors)
-				g->SetColor(Color(theString[i+1], theString[i+2], theString[i+3]));
+				g->SetColor(Color((uint8_t)theString[i+1], (uint8_t)theString[i+2], (uint8_t)theString[i+3]));
 			i += 3;
 		}
 		else
@@ -88,7 +77,7 @@ void TextWidget::DrawColorString(Graphics* g, std::string_view theString, int x,
 	
 	if (aCurString.length() > 0)
 		g->DrawString(aCurString, x + aWidth, y);
-}	
+}
 
 void TextWidget::DrawColorStringHilited(Graphics* g, std::string_view theString, int x, int y, int theStartPos, int theEndPos)
 {
@@ -112,23 +101,33 @@ void TextWidget::DrawColorStringHilited(Graphics* g, std::string_view theString,
 
 int TextWidget::GetStringIndex(std::string_view theString, int thePixel)
 {
+	// Walk whole code points so a selection never splits a UTF-8 sequence.
 	int aPos = 0;
-
-	for (int i = 0; i < (int)theString.length(); i++)
+	size_t aOffset = 0;
+	while (aOffset < theString.length())
 	{
-		std::string_view aLoSubStr = theString.substr(0, i);
-		std::string_view aHiSubStr = theString.substr(0, i+1);
+		size_t aNext = aOffset;
+		if (theString[aOffset] == (char)0xFF)
+		{
+			aNext = aOffset + 4; // color marker, zero width
+		}
+		else
+		{
+			char32_t aChar;
+			if (!UTF8DecodeNext(theString, aNext, aChar))
+				break;
+		}
 
-		int aLoLen = GetColorStringWidth(aLoSubStr);
-		int aHiLen = GetColorStringWidth(aHiSubStr);
-		if (thePixel >= (aLoLen+aHiLen)/2)
-			aPos = i+1;
+		int aLoLen = GetColorStringWidth(theString.substr(0, aOffset));
+		int aHiLen = GetColorStringWidth(theString.substr(0, aNext));
+		if (thePixel >= (aLoLen + aHiLen) / 2)
+			aPos = (int)aNext;
+		aOffset = aNext;
 	}
 
 	return aPos;
 }
 
-//UNICODE
 int TextWidget::GetColorStringWidth(std::string_view theString)
 {				
 	int aWidth = 0;	
@@ -136,8 +135,7 @@ int TextWidget::GetColorStringWidth(std::string_view theString)
 					
 	for (int i = 0; i < (int)theString.length(); i++)
 	{
-		// Removed wide strings because they're cringe
-		if (theString[i] == 0x00)
+		if (theString[i] == (char)0xFF)
 		{
 			aWidth += mFont->StringWidth(aTempString);
 			aTempString = "";
@@ -192,20 +190,59 @@ void TextWidget::Resize(int theX, int theY, int theWidth, int theHeight)
 		mScrollbar->GoToBottom();		
 }
 
-//UNICODE
 Color TextWidget::GetLastColor(std::string_view theString)
 {
-	int anIdx = theString.rfind((char)0xFF);
-	if (anIdx < 0)
+	size_t anIdx = theString.rfind((char)0xFF);
+	if (anIdx == std::string_view::npos)
 		return Color(0, 0, 0);
 	
-	return Color(theString[anIdx+1], theString[anIdx+2], theString[anIdx+3]);
+	return Color((uint8_t)theString[anIdx+1], (uint8_t)theString[anIdx+2], (uint8_t)theString[anIdx+3]);
 }
 
-//UNICODE
+// Where to wrap theText at theMaxWidth pixels: after the last fitting space, else past the last fitting code point.
+static size_t FindTextWrapPos(_Font* theFont, std::string_view theText, int theMaxWidth)
+{
+	int aWidth = 0;
+	size_t aFitEnd = 0;
+	size_t aSpaceEnd = std::string_view::npos;
+	size_t aOffset = 0;
+	while (aOffset < theText.length())
+	{
+		size_t aNext = aOffset;
+		if (theText[aOffset] == (char)0xFF)
+		{
+			aNext = aOffset + 4; // color marker
+		}
+		else
+		{
+			char32_t aChar;
+			if (!UTF8DecodeNext(theText, aNext, aChar))
+				break;
+			aWidth += theFont->CharWidth(aChar);
+			if (aWidth > theMaxWidth)
+				break;
+			aFitEnd = aNext;
+			if (aChar == U' ')
+				aSpaceEnd = aNext;
+		}
+		aOffset = aNext;
+	}
+
+	if (aOffset == theText.length()) // everything fit
+		return theText.length();
+	if (aSpaceEnd != std::string_view::npos)
+		return aSpaceEnd;
+	if (aFitEnd == 0)
+	{
+		char32_t aChar = 0;
+		UTF8DecodeNext(theText, aFitEnd, aChar); // break after the first code point to make progress
+	}
+	return aFitEnd;
+}
+
 void TextWidget::AddToPhysicalLines(int theIdx, const std::string& theLine)
 {		
-	std::string aCurString = "";
+	std::string aCurString;
 		
 	if (GetColorStringWidth(theLine) <= mWidth - 8)
 	{
@@ -213,46 +250,41 @@ void TextWidget::AddToPhysicalLines(int theIdx, const std::string& theLine)
 	}
 	else
 	{
-		int aCurPos = 0;										
-		while (aCurPos < (int)theLine.length())
+		size_t aCurPos = 0;
+		while (aCurPos < theLine.length())
 		{
-			int aNextCheckPos = aCurPos;
-			while ((aNextCheckPos < (int)theLine.length()) && (theLine[aNextCheckPos] == ' '))
-				aNextCheckPos++;
-			
-			int aSpacePos = theLine.find(" ", aNextCheckPos);
-			if (aSpacePos == -1)
-				aSpacePos = theLine.length();
-			
-			std::string aNewString = aCurString + theLine.substr(aCurPos, aSpacePos - aCurPos);
-			if (GetColorStringWidth(aNewString) > mWidth-8)
+			while ((aCurPos < theLine.length()) && (theLine[aCurPos] == ' '))
+				aCurPos++; // drop spaces at the start of a continuation line
+
+			size_t aBreakPos = FindTextWrapPos(mFont, std::string_view(theLine).substr(aCurPos), mWidth - 8) + aCurPos;
+			std::string aPiece(theLine.substr(aCurPos, aBreakPos - aCurPos));
+			if (aPiece.empty())
+				break;
+
+			aCurString += aPiece;
+			if (aBreakPos < theLine.length())
 			{
-				mPhysicalLines.push_back(aCurString);					
-				mLineMap.push_back(theIdx);
 				Color aColor = GetLastColor(aCurString);
-				aCurString = "  " [char(0xFF) + (char) aColor.mRed + (char) aColor.mGreen + (char) aColor.mBlue] +
-					theLine.substr(aNextCheckPos, aSpacePos - aNextCheckPos);
+				mPhysicalLines.push_back(aCurString);
+				mLineMap.push_back(theIdx);
+				aCurString = std::string("\xFF", 1) + (char)aColor.mRed + (char)aColor.mGreen + (char)aColor.mBlue;
 			}
-			else
-				aCurString = aNewString;
-			
-			aCurPos = aSpacePos;
+			aCurPos = aBreakPos;
 		}
 	}	
 	
-	if ((aCurString.compare("") != 0) || (theLine.compare("") == 0))
+	if (!aCurString.empty() || theLine.empty())
 	{
 		mPhysicalLines.push_back(aCurString);
 		mLineMap.push_back(theIdx);
 	}
 }
 
-//UNICODE
 void TextWidget::AddLine(const std::string& theLine)
 {
 	std::string aLine = theLine;
 
-	if (aLine.compare("") == 0)
+	if (aLine.empty())
 		aLine = " ";
 	
 	bool atBottom = mScrollbar->AtBottom();
@@ -261,7 +293,7 @@ void TextWidget::AddLine(const std::string& theLine)
 	
 	if ((int)mLogicalLines.size() > mMaxLines)
 	{
-		// Remove an extra 10 lines, for safty
+		// Remove an extra 10 lines, for safety
 		int aNumLinesToRemove = mLogicalLines.size() - mMaxLines + 10;
 				
 		mLogicalLines.erase(mLogicalLines.begin(), mLogicalLines.begin() + aNumLinesToRemove);
@@ -278,15 +310,13 @@ void TextWidget::AddLine(const std::string& theLine)
 		mPhysicalLines.erase(mPhysicalLines.begin(), mPhysicalLines.begin() + aPhysLineRemoveCount);
 		
 		// Offset the line map numbers
-		int i;
-		for (i = 0; i < (int)mLineMap.size(); i++)
+		for (int i = 0; i < (int)mLineMap.size(); i++)
 		{
 			mLineMap[i] -= aNumLinesToRemove;
 		}
-			//mLineMap.setElementAt(new Integer(((Integer) mLineMap.elementAt(i)).intValue() - aNumLinesToRemove), i);
 		
 		// Move the hilited area
-		for (i = 0; i < 2; i++)
+		for (int i = 0; i < 2; i++)
 		{
 			mHiliteArea[i][1] -= aNumLinesToRemove;
 			if (mHiliteArea[i][1] < 0)
@@ -426,8 +456,7 @@ std::string TextWidget::GetSelection()
 		for (int aStrIdx = aSelIndices[0]; aStrIdx < aSelIndices[1]; aStrIdx++)
 		{
 			char aChar = aString[aStrIdx];
-			// Widechars are cringe
-			if (aChar != 0x00)
+			if (aChar != (char)0xFF)
 				aSelString += aChar;
 			else
 				aStrIdx += 3;

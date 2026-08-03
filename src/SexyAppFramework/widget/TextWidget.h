@@ -37,20 +37,20 @@ class _Font;
 class TextWidget : public Widget, public ScrollListener
 {
 public:
-	_Font*				mFont;
-	ScrollbarWidget*	mScrollbar;
+	_Font*				mFont = nullptr;
+	ScrollbarWidget*	mScrollbar = nullptr;
 	
 	std::vector<std::string>	mLogicalLines;
 	std::vector<std::string>	mPhysicalLines;
 	std::vector<int>	mLineMap;
-	double				mPosition;
-	double				mPageSize;
-	bool				mStickToBottom;
-	int					mHiliteArea[2][2];
-	int					mMaxLines;
+	double				mPosition = 0.0;
+	double				mPageSize = 0.0;
+	bool				mStickToBottom = true;
+	int					mHiliteArea[2][2] = {};
+	int					mMaxLines = 2048;
 	
 public:
-	TextWidget();
+	TextWidget() = default;
 
 	virtual std::vector<std::string> GetLines();
 	virtual void SetLines(std::vector<std::string> theNewLines);
