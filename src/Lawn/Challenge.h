@@ -191,13 +191,6 @@ public:
     void                    IZombieInitLevel();
     void                    DrawRain(Graphics* g);
     void                    DrawWeather(Graphics* g);
-    void                    SquirrelUpdate();
-    /*inline*/ int          SquirrelCountUncaught();
-    void                    SquirrelStart();
-    void                    SquirrelFound(GridItem* theSquirrel);
-    void                    SquirrelPeek(GridItem* theSquirrel);
-    void                    SquirrelChew(GridItem* theSquirrel);
-    void                    SquirrelUpdateOne(GridItem* theSquirrel);
     void                    IZombieSetupPlant(Plant* thePlant);
     void                    UpdateRain();
     int                    IZombieEatBrain(Zombie* theZombie);

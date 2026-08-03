@@ -461,7 +461,6 @@ public:
 	/*inline*/ void					ClearAdviceImmediately();
 	/*inline*/ bool					IsFinalScaryPotterStage();
 	/*inline*/ void					DisplayAdviceAgain(std::string_view theAdvice, MessageStyle theMessageStyle, AdviceType theHelpIndex);
-	GridItem*						GetSquirrelAt(int theGridX, int theGridY);
 	GridItem*						GetZenToolAt(int theGridX, int theGridY);
 	bool							IsPlantInGoldWateringCanRange(int theMouseX, int theMouseY, Plant* thePlant);
 	bool							StageHasZombieWalkInFromRight();
