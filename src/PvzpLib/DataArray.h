@@ -25,6 +25,7 @@
 #include <iterator>
 #include <memory>
 #include <new>
+#include <cstdlib>
 #include "PvzpDebug.h"
 #include "PvzpCommon.h"
 
@@ -158,7 +159,7 @@ public:
 		if (mSize >= mMaxSize)
 		{
 			PvzpTraceWithoutSpamming("Data array full: %s\n", mName);
-			return nullptr;
+			std::abort(); // defined fail-stop on any platform, not UB
 		}
 
 		PVZP_ASSERT(mFreeListHead <= mMaxUsedCount, "DataArrayAlloc error in %s", mName);

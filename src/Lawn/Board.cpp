@@ -6099,9 +6099,9 @@ bool RenderItemSortFunc(const RenderItem& theItem1, const RenderItem& theItem2)
 	return theItem1.mZPos < theItem2.mZPos;
 }
 
-static inline bool RenderListFull(int theCurRenderItem)
+static inline bool RenderListFull(int theCurRenderItem, int theNeededItems = 1)
 {
-	if (theCurRenderItem >= MAX_RENDER_ITEMS)
+	if (theCurRenderItem + theNeededItems > MAX_RENDER_ITEMS)
 	{
 		PvzpTraceWithoutSpamming("Too many render items!\n");
 		return true;
@@ -6111,7 +6111,7 @@ static inline bool RenderListFull(int theCurRenderItem)
 
 void Board::AddBossRenderItem(RenderItem* theRenderList, int& theCurRenderItem, Zombie* theBossZombie)
 {
-	if (RenderListFull(theCurRenderItem)) return;
+	if (RenderListFull(theCurRenderItem, 5)) return; // worst case: 4 boss parts + 1 fireball
 	int aBackLegRow = 1;
 	int aFrontLegRow = 3;
 	int aBackArmRow = 4;
