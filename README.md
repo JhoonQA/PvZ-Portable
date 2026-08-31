@@ -354,13 +354,6 @@ The `SexyAppFramework` directory may contain code originally based on the **PopC
 
 Note that this code has been **heavily refactored**, **optimized** and **modernized** by the community over time under the **LGPL-3.0-or-later** license.
 
-## Thanks
-
-- **PopCap Games**: For creating the amazing game and releasing their framework to the public with a permissive license.
-- **The SDL Team**: For the amazing cross-platform development library that powers this port.
-- **The OpenMPT Team**: For libopenmpt, enabling high-quality MO3 music playback.
-- All the contributors who have worked or are actively working in this amazing project, especially [@Headshotnoby](https://www.github.com/headshot2017) and [@Patoke](https://www.github.com/Patoke) for their groundwork.
-
 ## FAQ
 
 <details>
@@ -398,4 +391,10 @@ Windows, Linux, macOS, BSD, Haiku, Android, iOS/iPadOS, WebAssembly, and Nintend
 
 </details>
 
-. . .
+
+## Thanks
+
+- **PopCap Games**: For creating the amazing game and releasing their framework to the public with a permissive license.
+- **The SDL Team**: For the amazing cross-platform development library that powers this port.
+- **The OpenMPT Team**: For libopenmpt, enabling high-quality MO3 music playback.
+- All the contributors who have worked or are actively working in this amazing project, especially [@Headshotnoby](https://www.github.com/headshot2017) and [@Patoke](https://www.github.com/Patoke) for their groundwork.
