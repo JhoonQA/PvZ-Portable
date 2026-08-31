@@ -360,3 +360,42 @@ Note that this code has been **heavily refactored**, **optimized** and **moderni
 - **The SDL Team**: For the amazing cross-platform development library that powers this port.
 - **The OpenMPT Team**: For libopenmpt, enabling high-quality MO3 music playback.
 - All the contributors who have worked or are actively working in this amazing project, especially [@Headshotnoby](https://www.github.com/headshot2017) and [@Patoke](https://www.github.com/Patoke) for their groundwork.
+
+## FAQ
+
+<details>
+<summary>Do I need the original game?</summary>
+
+Yes. You must provide your own legally purchased PvZ: GOTY game data. This project does not include copyrighted assets.
+
+</details>
+
+<details>
+<summary>What game versions are supported?</summary>
+
+The main target is **PvZ GOTY 1.2.0.1073 EN**. Other GOTY versions are also supported, with only minor cosmetic differences.
+
+</details>
+
+<details>
+<summary>Can I transfer save files?</summary>
+
+Yes. Global user data is compatible with the original PC game, and `.v4` mid-level saves are portable across platforms and architectures.
+
+</details>
+
+<details>
+<summary>Can I play without installing the game?</summary>
+
+Yes. The **WebAssembly version** can run directly in your browser, but you still need to provide your own game data.
+
+</details>
+
+<details>
+<summary>Which platforms are supported?</summary>
+
+Windows, Linux, macOS, BSD, Haiku, Android, iOS/iPadOS, WebAssembly, and Nintendo Switch, among others.
+
+</details>
+
+. . .
